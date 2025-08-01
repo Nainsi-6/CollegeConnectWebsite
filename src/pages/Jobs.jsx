@@ -875,6 +875,601 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+// "use client"
+
+// import { useState, useEffect } from "react"
+// import { useNavigate } from "react-router-dom"
+// import axios from "axios"
+// import { toast } from "react-toastify"
+// import Navbar from "../component/Navbar"
+// import JobCard from "../component/JobCard"
+// import JobFilters from "../component/JobFilters"
+// import {
+//   MagnifyingGlassIcon,
+//   AdjustmentsHorizontalIcon,
+//   ChevronDownIcon,
+//   ChevronUpIcon,
+//   BriefcaseIcon,
+//   ArrowPathIcon,
+// } from "@heroicons/react/24/outline"
+
+// const Jobs = () => {
+//   const navigate = useNavigate()
+//   const [jobs, setJobs] = useState([])
+//   const [recommendedJobs, setRecommendedJobs] = useState([])
+//   const [loading, setLoading] = useState({
+//     jobs: true,
+//     recommendedJobs: true,
+//     syncing: false,
+//   })
+//   const [filters, setFilters] = useState({
+//     search: "",
+//     type: "",
+//     location: "",
+//     company: "",
+//     skills: [],
+//     source: "",
+//   })
+//   const [showFilters, setShowFilters] = useState(false)
+//   const [savedJobs, setSavedJobs] = useState([])
+//   const [activeTab, setActiveTab] = useState("recommended")
+//   const [pagination, setPagination] = useState({
+//     page: 1,
+//     limit: 10,
+//     total: 0,
+//     pages: 1,
+//   })
+//   const [error, setError] = useState(null)
+//   const [message, setMessage] = useState(null)
+
+//   // Get the token from localStorage
+//   const token = localStorage.getItem("token")
+
+//   // Axios config with token
+//   const config = {
+//     headers: {
+//       Authorization: `Bearer ${token}`,
+//     },
+//   }
+
+//   // API base URL
+//   const API_BASE_URL = "http://localhost:5005/api"
+
+//   useEffect(() => {
+//     if (!token) {
+//       navigate("/login")
+//       return
+//     }
+
+//     // Load saved jobs from localStorage
+//     const savedJobsFromStorage = JSON.parse(localStorage.getItem("savedJobs") || "[]")
+//     setSavedJobs(savedJobsFromStorage)
+
+//     // Fetch initial data
+//     fetchJobs()
+//     fetchRecommendedJobs()
+//   }, [token])
+
+//   // Fetch all jobs with pagination and filters
+//   const fetchJobs = async (newPage) => {
+//     try {
+//       setLoading((prev) => ({ ...prev, jobs: true }))
+//       setError(null)
+//       setMessage(null)
+
+//       // Use the explicitly passed page or the current pagination state
+//       const currentPage = newPage !== undefined ? newPage : pagination.page
+
+//       console.log(`Fetching jobs for page ${currentPage}`)
+
+//       // Build query string from filters
+//       const queryParams = new URLSearchParams()
+//       if (filters.search) queryParams.append("search", filters.search)
+//       if (filters.type) queryParams.append("type", filters.type)
+//       if (filters.location) queryParams.append("location", filters.location)
+//       if (filters.company) queryParams.append("company", filters.company)
+//       if (filters.skills.length > 0) queryParams.append("skills", filters.skills.join(","))
+//       if (filters.source) queryParams.append("source", filters.source)
+
+//       // Ensure page is a number and convert to string for the query
+//       queryParams.append("page", String(currentPage))
+//       queryParams.append("limit", String(pagination.limit))
+
+//       const requestUrl = `${API_BASE_URL}/jobs?${queryParams.toString()}`
+//       console.log(`Making API request to: ${requestUrl}`)
+
+//       const response = await axios.get(requestUrl, config)
+
+//       console.log("API Response:", response.data)
+
+//       if (response.data && response.data.success) {
+//         setJobs(response.data.jobs || [])
+//         setPagination(
+//           response.data.pagination || {
+//             page: 1,
+//             limit: 10,
+//             total: 0,
+//             pages: 1,
+//           },
+//         )
+
+//         // Check if there's a message from the server
+//         if (response.data.message) {
+//           setMessage(response.data.message)
+//         }
+//       } else {
+//         // Handle unexpected response format
+//         setJobs([])
+//         toast.error("Invalid response format from server")
+//       }
+//     } catch (error) {
+//       console.error("Error fetching jobs:", error)
+//       setError("Failed to load jobs. Please try again later.")
+//       setJobs([])
+//     } finally {
+//       setLoading((prev) => ({ ...prev, jobs: false }))
+//     }
+//   }
+
+//   // Fetch recommended jobs
+//   const fetchRecommendedJobs = async () => {
+//     try {
+//       setLoading((prev) => ({ ...prev, recommendedJobs: true }))
+//       setError(null)
+//       setMessage(null)
+
+//       const response = await axios.get(`${API_BASE_URL}/jobs/recommended`, config)
+
+//       if (response.data && response.data.success) {
+//         setRecommendedJobs(response.data.jobs || [])
+
+//         // Check if there's a message from the server
+//         if (response.data.message) {
+//           setMessage(response.data.message)
+//         }
+//       } else {
+//         setRecommendedJobs([])
+//       }
+//     } catch (error) {
+//       console.error("Error fetching recommended jobs:", error)
+//       setRecommendedJobs([])
+//     } finally {
+//       setLoading((prev) => ({ ...prev, recommendedJobs: false }))
+//     }
+//   }
+
+//   // Sync external jobs
+//   const syncExternalJobs = async () => {
+//     try {
+//       setLoading((prev) => ({ ...prev, syncing: true }))
+//       setError(null)
+//       setMessage("Syncing jobs from external sources. This may take a few minutes...")
+
+//       // Show toast notification that syncing has started
+//       toast.info("Syncing jobs from external sources. This may take a few minutes...", {
+//         autoClose: false,
+//         toastId: "sync-jobs",
+//       })
+
+//       const response = await axios.post(
+//         `${API_BASE_URL}/jobs/sync-external`,
+//         {
+//           sources: ["LinkedIn", "Unstop", "Indeed"],
+//         },
+//         config,
+//       )
+
+//       if (response.data && response.data.success) {
+//         // Close the previous toast
+//         toast.dismiss("sync-jobs")
+//         toast.success(response.data.message || "Job sync started successfully")
+
+//         // Set a message to inform the user
+//         setMessage("Job scraping is running in the background. Please check back in a few minutes for new jobs.")
+
+//         // Schedule multiple refreshes to check for new jobs
+//         const checkForNewJobs = () => {
+//           const existingCount = response.data.existingJobsCount || 0
+
+//           // Function to check if new jobs are available
+//           const checkJobs = async () => {
+//             try {
+//               const checkResponse = await axios.get(`${API_BASE_URL}/jobs?limit=1`, config)
+//               const newCount = checkResponse.data.pagination?.total || 0
+
+//               console.log(`Checking for new jobs: ${newCount} vs ${existingCount}`)
+
+//               if (newCount > existingCount) {
+//                 // New jobs found, refresh the lists
+//                 toast.success(`${newCount - existingCount} new jobs have been added!`)
+//                 fetchJobs()
+//                 fetchRecommendedJobs()
+//                 return true // Stop checking
+//               }
+//               return false // Continue checking
+//             } catch (err) {
+//               console.error("Error checking for new jobs:", err)
+//               return false // Continue checking despite error
+//             }
+//           }
+
+//           // Check every 10 seconds for 2 minutes
+//           let checkCount = 0
+//           const maxChecks = 12
+
+//           const intervalId = setInterval(async () => {
+//             checkCount++
+//             console.log(`Check ${checkCount}/${maxChecks} for new jobs`)
+
+//             const newJobsFound = await checkJobs()
+
+//             if (newJobsFound || checkCount >= maxChecks) {
+//               clearInterval(intervalId)
+//               if (!newJobsFound && checkCount >= maxChecks) {
+//                 // If we've checked the maximum number of times and still no jobs
+//                 fetchJobs() // Refresh anyway
+//                 fetchRecommendedJobs()
+//               }
+//             }
+//           }, 10000)
+//         }
+
+//         // Start checking for new jobs
+//         checkForNewJobs()
+//       }
+//     } catch (error) {
+//       console.error("Error syncing external jobs:", error)
+//       toast.dismiss("sync-jobs")
+//       toast.error("Failed to sync external jobs: " + (error.response?.data?.message || error.message))
+//       setMessage(null)
+//     } finally {
+//       // Don't set syncing to false immediately - let it show as syncing until we detect new jobs
+//       setTimeout(() => {
+//         setLoading((prev) => ({ ...prev, syncing: false }))
+//       }, 30000) // Show syncing state for at least 30 seconds
+//     }
+//   }
+
+//   const handleSearch = (e) => {
+//     if (e) e.preventDefault()
+
+//     console.log("Applying filters:", filters)
+
+//     // Set active tab to "all" when searching
+//     setActiveTab("all")
+
+//     // Reset to first page on new search
+//     setPagination((prev) => ({ ...prev, page: 1 }))
+
+//     // Fetch jobs with filters
+//     fetchJobs()
+//   }
+
+//   const handleResetFilters = () => {
+//     setFilters({
+//       search: "",
+//       type: "",
+//       location: "",
+//       company: "",
+//       skills: [],
+//       source: "",
+//     })
+
+//     // Reset to page 1 and fetch jobs
+//     setPagination((prev) => ({ ...prev, page: 1 }))
+//     setTimeout(() => fetchJobs(), 0)
+//   }
+
+//   const handlePageChange = (newPage) => {
+//     if (newPage < 1 || newPage > pagination.pages) return
+
+//     console.log(`Changing to page ${newPage}`)
+
+//     // Update the pagination state
+//     setPagination((prev) => {
+//       console.log(`Updating pagination state from page ${prev.page} to ${newPage}`)
+//       return { ...prev, page: newPage }
+//     })
+
+//     // Directly fetch the jobs with the new page number
+//     fetchJobs(newPage)
+
+//     // Scroll to top of job listings
+//     window.scrollTo({ top: 0, behavior: "smooth" })
+//   }
+
+//   const toggleSaveJob = (jobId) => {
+//     if (savedJobs.includes(jobId)) {
+//       // Remove from saved jobs
+//       const updatedSavedJobs = savedJobs.filter((id) => id !== jobId)
+//       setSavedJobs(updatedSavedJobs)
+//       localStorage.setItem("savedJobs", JSON.stringify(updatedSavedJobs))
+//       toast.success("Job removed from saved jobs")
+//     } else {
+//       // Add to saved jobs
+//       const updatedSavedJobs = [...savedJobs, jobId]
+//       setSavedJobs(updatedSavedJobs)
+//       localStorage.setItem("savedJobs", JSON.stringify(updatedSavedJobs))
+//       toast.success("Job saved successfully")
+//     }
+//   }
+
+//   const handleApplyForJob = async (jobId, applicationLink) => {
+//     try {
+//       await axios.post(`${API_BASE_URL}/jobs/${jobId}/apply`, {}, config)
+//       toast.success("Application recorded!")
+//       // Open application link in new tab
+//       window.open(applicationLink, "_blank")
+//     } catch (error) {
+//       console.error("Error applying for job:", error)
+//       toast.error("Failed to apply for job, but opening application link")
+//       // Still open the link even if tracking fails
+//       window.open(applicationLink, "_blank")
+//     }
+//   }
+
+//   // Function to refresh jobs
+//   const refreshJobs = () => {
+//     if (activeTab === "recommended") {
+//       fetchRecommendedJobs()
+//     } else {
+//       fetchJobs()
+//     }
+//   }
+
+//   // Generate pagination buttons
+//   const renderPagination = () => {
+//     const buttons = []
+//     const maxButtonsToShow = 5 // Maximum number of page buttons to show
+
+//     let startPage = Math.max(1, pagination.page - Math.floor(maxButtonsToShow / 2))
+//     const endPage = Math.min(pagination.pages, startPage + maxButtonsToShow - 1)
+
+//     // Adjust startPage if we're near the end
+//     if (endPage - startPage + 1 < maxButtonsToShow) {
+//       startPage = Math.max(1, endPage - maxButtonsToShow + 1)
+//     }
+
+//     // Add first page button if not already included
+//     if (startPage > 1) {
+//       buttons.push(
+//         <button
+//           key="first"
+//           onClick={() => handlePageChange(1)}
+//           className="px-3 py-1 border rounded mx-1 hover:bg-gray-100"
+//         >
+//           1
+//         </button>,
+//       )
+
+//       // Add ellipsis if there's a gap
+//       if (startPage > 2) {
+//         buttons.push(
+//           <span key="ellipsis1" className="px-2">
+//             ...
+//           </span>,
+//         )
+//       }
+//     }
+
+//     // Add page number buttons
+//     for (let i = startPage; i <= endPage; i++) {
+//       buttons.push(
+//         <button
+//           key={i}
+//           onClick={() => handlePageChange(i)}
+//           className={`px-3 py-1 border rounded mx-1 ${
+//             pagination.page === i ? "bg-purple-600 text-white" : "hover:bg-gray-100"
+//           }`}
+//         >
+//           {i}
+//         </button>,
+//       )
+//     }
+
+//     // Add last page button if not already included
+//     if (endPage < pagination.pages) {
+//       // Add ellipsis if there's a gap
+//       if (endPage < pagination.pages - 1) {
+//         buttons.push(
+//           <span key="ellipsis2" className="px-2">
+//             ...
+//           </span>,
+//         )
+//       }
+
+//       buttons.push(
+//         <button
+//           key="last"
+//           onClick={() => handlePageChange(pagination.pages)}
+//           className="px-3 py-1 border rounded mx-1 hover:bg-gray-100"
+//         >
+//           {pagination.pages}
+//         </button>,
+//       )
+//     }
+
+//     return buttons
+//   }
+
+//   return (
+//     <div className="min-h-screen bg-gray-200">
+//       <Navbar />
+
+//       <div className="container mx-auto px-4 pt-20 pb-10">
+//         <div className="flex justify-between items-center mb-6">
+//           <h1 className="text-2xl font-bold text-gray-800">
+//             {activeTab === "recommended" ? "Recommended Jobs" : "All Jobs"}
+//           </h1>
+//           <div className="flex items-center gap-2">
+//             <button
+//               onClick={() => setActiveTab("recommended")}
+//               className={`px-4 py-2 rounded-md font-medium ${
+//                 activeTab === "recommended"
+//                   ? "bg-blue-600 text-white"
+//                   : "bg-white text-blue-600 border border-purple-600"
+//               }`}
+//             >
+//               Recommended
+//             </button>
+//             <button
+//               onClick={() => setActiveTab("all")}
+//               className={`px-4 py-2 rounded-md font-medium ${
+//                 activeTab === "all" ? "bg-purple-600 text-white" : "bg-white text-purple-600 border border-purple-600"
+//               }`}
+//             >
+//               All Jobs
+//             </button>
+//             <button
+//               onClick={syncExternalJobs}
+//               disabled={loading.syncing}
+//               className={`px-4 py-2 rounded-md font-medium ${
+//                 loading.syncing
+//                   ? "bg-gray-400 text-white cursor-not-allowed"
+//                   : "bg-green-600 text-white hover:bg-green-700"
+//               }`}
+//             >
+//               {loading.syncing ? "Syncing..." : "Sync External Jobs"}
+//             </button>
+//           </div>
+//         </div>
+
+//         {/* Search Bar */}
+//         <div className="mb-4 flex justify-between items-center">
+//           <form onSubmit={handleSearch} className="flex-grow mr-4">
+//             <div className="relative">
+//               <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+//               <input
+//                 type="text"
+//                 name="search"
+//                 placeholder="Search jobs..."
+//                 value={filters.search}
+//                 onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
+//                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-purple-400"
+//               />
+//             </div>
+//           </form>
+//           <div className="flex items-center gap-2">
+//             <button onClick={refreshJobs} className="p-2 rounded-full hover:bg-gray-200" title="Refresh jobs">
+//               <ArrowPathIcon className="h-5 w-5 text-gray-600" />
+//             </button>
+//             <button
+//               onClick={() => setShowFilters((prev) => !prev)}
+//               className="flex items-center gap-1 text-sm text-purple-600 hover:underline"
+//             >
+//               <AdjustmentsHorizontalIcon className="h-5 w-5" />
+//               Filters
+//               {showFilters ? <ChevronUpIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
+//             </button>
+//           </div>
+//         </div>
+
+//         {/* Filters Panel */}
+//         {showFilters && (
+//           <JobFilters filters={filters} setFilters={setFilters} onSearch={handleSearch} onReset={handleResetFilters} />
+//         )}
+
+//         {/* Message from server */}
+//         {message && (
+//           <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded mb-6">
+//             <p>{message}</p>
+//           </div>
+//         )}
+
+//         {/* Error Message */}
+//         {error && (
+//           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+//             <p>{error}</p>
+//           </div>
+//         )}
+
+//         {/* Job Listings */}
+//         {loading[activeTab === "recommended" ? "recommendedJobs" : "jobs"] ? (
+//           <div className="flex justify-center items-center py-20">
+//             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
+//           </div>
+//         ) : (
+//           <>
+//             {(activeTab === "recommended" ? recommendedJobs : jobs).length === 0 ? (
+//               <div className="text-center py-16 bg-white rounded-lg shadow">
+//                 <div className="mx-auto h-12 w-12 text-gray-400">
+//                   <BriefcaseIcon className="h-12 w-12" />
+//                 </div>
+//                 <h3 className="mt-2 text-lg font-medium text-gray-900">No jobs found</h3>
+//                 <p className="mt-1 text-sm text-gray-500">
+//                   {activeTab === "recommended"
+//                     ? "We don't have any recommended jobs for you yet. Try syncing external jobs or update your profile to get better recommendations."
+//                     : "No jobs match your search criteria. Try adjusting your filters or sync external jobs."}
+//                 </p>
+//                 <div className="mt-6 flex justify-center gap-4">
+//                   {activeTab === "all" && (
+//                     <button
+//                       onClick={handleResetFilters}
+//                       className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none"
+//                     >
+//                       Reset Filters
+//                     </button>
+//                   )}
+//                   <button
+//                     onClick={syncExternalJobs}
+//                     disabled={loading.syncing}
+//                     className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
+//                       loading.syncing ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
+//                     } focus:outline-none`}
+//                   >
+//                     {loading.syncing ? "Syncing..." : "Sync External Jobs"}
+//                   </button>
+//                 </div>
+//               </div>
+//             ) : (
+//               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+//                 {(activeTab === "recommended" ? recommendedJobs : jobs).map((job) => (
+//                   <JobCard
+//                     key={job._id}
+//                     job={job}
+//                     onApply={handleApplyForJob}
+//                     isSaved={savedJobs.includes(job._id)}
+//                     onToggleSave={() => toggleSaveJob(job._id)}
+//                   />
+//                 ))}
+//               </div>
+//             )}
+//           </>
+//         )}
+
+//         {/* Pagination - Enhanced version */}
+//         {!loading.jobs && pagination.pages > 1 && activeTab === "all" && (
+//           <div className="flex flex-wrap justify-center mt-8 bg-white rounded-lg py-3 px-6 shadow">
+//             <button
+//               onClick={() => handlePageChange(pagination.page - 1)}
+//               className="px-3 py-1 border rounded disabled:opacity-50 mr-2"
+//               disabled={pagination.page === 1}
+//             >
+//               &laquo; Prev
+//             </button>
+
+//             {renderPagination()}
+
+//             <button
+//               onClick={() => handlePageChange(pagination.page + 1)}
+//               className="px-3 py-1 border rounded disabled:opacity-50 ml-2"
+//               disabled={pagination.page === pagination.pages}
+//             >
+//               Next &raquo;
+//             </button>
+
+//             <div className="w-full text-center mt-2 text-sm text-gray-600">
+//               Page {pagination.page} of {pagination.pages} | Total Jobs: {pagination.total}
+//             </div>
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   )
+// }
+
+// export default Jobs
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -1220,7 +1815,7 @@ const Jobs = () => {
   // Generate pagination buttons
   const renderPagination = () => {
     const buttons = []
-    const maxButtonsToShow = 5 // Maximum number of page buttons to show
+    const maxButtonsToShow = window.innerWidth < 640 ? 3 : 5 // Fewer buttons on mobile
 
     let startPage = Math.max(1, pagination.page - Math.floor(maxButtonsToShow / 2))
     const endPage = Math.min(pagination.pages, startPage + maxButtonsToShow - 1)
@@ -1236,7 +1831,7 @@ const Jobs = () => {
         <button
           key="first"
           onClick={() => handlePageChange(1)}
-          className="px-3 py-1 border rounded mx-1 hover:bg-gray-100"
+          className="px-2 sm:px-3 py-1 border rounded mx-1 hover:bg-gray-100 text-xs sm:text-sm"
         >
           1
         </button>,
@@ -1245,7 +1840,7 @@ const Jobs = () => {
       // Add ellipsis if there's a gap
       if (startPage > 2) {
         buttons.push(
-          <span key="ellipsis1" className="px-2">
+          <span key="ellipsis1" className="px-1 sm:px-2 text-xs sm:text-sm">
             ...
           </span>,
         )
@@ -1258,7 +1853,7 @@ const Jobs = () => {
         <button
           key={i}
           onClick={() => handlePageChange(i)}
-          className={`px-3 py-1 border rounded mx-1 ${
+          className={`px-2 sm:px-3 py-1 border rounded mx-1 text-xs sm:text-sm ${
             pagination.page === i ? "bg-purple-600 text-white" : "hover:bg-gray-100"
           }`}
         >
@@ -1272,7 +1867,7 @@ const Jobs = () => {
       // Add ellipsis if there's a gap
       if (endPage < pagination.pages - 1) {
         buttons.push(
-          <span key="ellipsis2" className="px-2">
+          <span key="ellipsis2" className="px-1 sm:px-2 text-xs sm:text-sm">
             ...
           </span>,
         )
@@ -1282,7 +1877,7 @@ const Jobs = () => {
         <button
           key="last"
           onClick={() => handlePageChange(pagination.pages)}
-          className="px-3 py-1 border rounded mx-1 hover:bg-gray-100"
+          className="px-2 sm:px-3 py-1 border rounded mx-1 hover:bg-gray-100 text-xs sm:text-sm"
         >
           {pagination.pages}
         </button>,
@@ -1296,47 +1891,57 @@ const Jobs = () => {
     <div className="min-h-screen bg-gray-200">
       <Navbar />
 
-      <div className="container mx-auto px-4 pt-20 pb-10">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">
+      <div className="container mx-auto px-2 sm:px-4 pt-20 pb-10">
+        {/* Header Section - Responsive */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-4">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
             {activeTab === "recommended" ? "Recommended Jobs" : "All Jobs"}
           </h1>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActiveTab("recommended")}
-              className={`px-4 py-2 rounded-md font-medium ${
-                activeTab === "recommended"
-                  ? "bg-blue-600 text-white"
-                  : "bg-white text-blue-600 border border-purple-600"
-              }`}
-            >
-              Recommended
-            </button>
-            <button
-              onClick={() => setActiveTab("all")}
-              className={`px-4 py-2 rounded-md font-medium ${
-                activeTab === "all" ? "bg-purple-600 text-white" : "bg-white text-purple-600 border border-purple-600"
-              }`}
-            >
-              All Jobs
-            </button>
+          
+          {/* Tab and Action Buttons */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            {/* Tab Buttons */}
+            <div className="flex rounded-lg overflow-hidden">
+              <button
+                onClick={() => setActiveTab("recommended")}
+                className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm font-medium ${
+                  activeTab === "recommended"
+                    ? "bg-blue-600 text-white"
+                    : "bg-white text-blue-600 border border-blue-600"
+                }`}
+              >
+                Recommended
+              </button>
+              <button
+                onClick={() => setActiveTab("all")}
+                className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm font-medium ${
+                  activeTab === "all" 
+                    ? "bg-purple-600 text-white" 
+                    : "bg-white text-purple-600 border border-purple-600"
+                }`}
+              >
+                All Jobs
+              </button>
+            </div>
+            
+            {/* Sync Button */}
             <button
               onClick={syncExternalJobs}
               disabled={loading.syncing}
-              className={`px-4 py-2 rounded-md font-medium ${
+              className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium ${
                 loading.syncing
                   ? "bg-gray-400 text-white cursor-not-allowed"
                   : "bg-green-600 text-white hover:bg-green-700"
               }`}
             >
-              {loading.syncing ? "Syncing..." : "Sync External Jobs"}
+              {loading.syncing ? "Syncing..." : "Sync Jobs"}
             </button>
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="mb-4 flex justify-between items-center">
-          <form onSubmit={handleSearch} className="flex-grow mr-4">
+        {/* Search Bar - Responsive */}
+        <div className="mb-4 flex flex-col sm:flex-row gap-2">
+          <form onSubmit={handleSearch} className="flex-grow">
             <div className="relative">
               <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
               <input
@@ -1345,20 +1950,25 @@ const Jobs = () => {
                 placeholder="Search jobs..."
                 value={filters.search}
                 onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-purple-400"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:border-purple-400 text-sm sm:text-base"
               />
             </div>
           </form>
-          <div className="flex items-center gap-2">
-            <button onClick={refreshJobs} className="p-2 rounded-full hover:bg-gray-200" title="Refresh jobs">
+          
+          <div className="flex items-center justify-between sm:justify-start gap-2">
+            <button 
+              onClick={refreshJobs} 
+              className="p-2 rounded-full hover:bg-gray-200" 
+              title="Refresh jobs"
+            >
               <ArrowPathIcon className="h-5 w-5 text-gray-600" />
             </button>
             <button
               onClick={() => setShowFilters((prev) => !prev)}
-              className="flex items-center gap-1 text-sm text-purple-600 hover:underline"
+              className="flex items-center gap-1 text-sm text-purple-600 hover:underline px-2 py-1"
             >
-              <AdjustmentsHorizontalIcon className="h-5 w-5" />
-              Filters
+              <AdjustmentsHorizontalIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="hidden sm:inline">Filters</span>
               {showFilters ? <ChevronUpIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
             </button>
           </div>
@@ -1371,41 +1981,41 @@ const Jobs = () => {
 
         {/* Message from server */}
         {message && (
-          <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded mb-6">
+          <div className="bg-blue-50 border border-blue-200 text-blue-700 px-3 sm:px-4 py-3 rounded mb-4 sm:mb-6 text-sm">
             <p>{message}</p>
           </div>
         )}
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-3 rounded mb-4 sm:mb-6 text-sm">
             <p>{error}</p>
           </div>
         )}
 
-        {/* Job Listings */}
+        {/* Job Listings - Responsive Grid */}
         {loading[activeTab === "recommended" ? "recommendedJobs" : "jobs"] ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
+          <div className="flex justify-center items-center py-16 sm:py-20">
+            <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-t-2 border-b-2 border-purple-600"></div>
           </div>
         ) : (
           <>
             {(activeTab === "recommended" ? recommendedJobs : jobs).length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-lg shadow">
-                <div className="mx-auto h-12 w-12 text-gray-400">
-                  <BriefcaseIcon className="h-12 w-12" />
+              <div className="text-center py-12 sm:py-16 bg-white rounded-lg shadow mx-2 sm:mx-0">
+                <div className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400">
+                  <BriefcaseIcon className="h-8 w-8 sm:h-12 sm:w-12" />
                 </div>
-                <h3 className="mt-2 text-lg font-medium text-gray-900">No jobs found</h3>
-                <p className="mt-1 text-sm text-gray-500">
+                <h3 className="mt-2 text-base sm:text-lg font-medium text-gray-900">No jobs found</h3>
+                <p className="mt-1 text-sm text-gray-500 px-4">
                   {activeTab === "recommended"
                     ? "We don't have any recommended jobs for you yet. Try syncing external jobs or update your profile to get better recommendations."
                     : "No jobs match your search criteria. Try adjusting your filters or sync external jobs."}
                 </p>
-                <div className="mt-6 flex justify-center gap-4">
+                <div className="mt-6 flex flex-col sm:flex-row justify-center gap-2 sm:gap-4 px-4">
                   {activeTab === "all" && (
                     <button
                       onClick={handleResetFilters}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none"
+                      className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none"
                     >
                       Reset Filters
                     </button>
@@ -1413,7 +2023,7 @@ const Jobs = () => {
                   <button
                     onClick={syncExternalJobs}
                     disabled={loading.syncing}
-                    className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
+                    className={`inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
                       loading.syncing ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
                     } focus:outline-none`}
                   >
@@ -1422,7 +2032,7 @@ const Jobs = () => {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {(activeTab === "recommended" ? recommendedJobs : jobs).map((job) => (
                   <JobCard
                     key={job._id}
@@ -1437,29 +2047,38 @@ const Jobs = () => {
           </>
         )}
 
-        {/* Pagination - Enhanced version */}
+        {/* Pagination - Mobile Responsive */}
         {!loading.jobs && pagination.pages > 1 && activeTab === "all" && (
-          <div className="flex flex-wrap justify-center mt-8 bg-white rounded-lg py-3 px-6 shadow">
-            <button
-              onClick={() => handlePageChange(pagination.page - 1)}
-              className="px-3 py-1 border rounded disabled:opacity-50 mr-2"
-              disabled={pagination.page === 1}
-            >
-              &laquo; Prev
-            </button>
+          <div className="flex flex-col items-center mt-6 sm:mt-8 bg-white rounded-lg py-3 px-2 sm:px-6 shadow mx-2 sm:mx-0">
+            <div className="flex flex-wrap justify-center items-center gap-1">
+              <button
+                onClick={() => handlePageChange(pagination.page - 1)}
+                className="px-2 sm:px-3 py-1 border rounded disabled:opacity-50 text-xs sm:text-sm"
+                disabled={pagination.page === 1}
+              >
+                <span className="hidden sm:inline">&laquo; Prev</span>
+                <span className="sm:hidden">&laquo;</span>
+              </button>
 
-            {renderPagination()}
+              {renderPagination()}
 
-            <button
-              onClick={() => handlePageChange(pagination.page + 1)}
-              className="px-3 py-1 border rounded disabled:opacity-50 ml-2"
-              disabled={pagination.page === pagination.pages}
-            >
-              Next &raquo;
-            </button>
+              <button
+                onClick={() => handlePageChange(pagination.page + 1)}
+                className="px-2 sm:px-3 py-1 border rounded disabled:opacity-50 text-xs sm:text-sm"
+                disabled={pagination.page === pagination.pages}
+              >
+                <span className="hidden sm:inline">Next &raquo;</span>
+                <span className="sm:hidden">&raquo;</span>
+              </button>
+            </div>
 
-            <div className="w-full text-center mt-2 text-sm text-gray-600">
-              Page {pagination.page} of {pagination.pages} | Total Jobs: {pagination.total}
+            <div className="w-full text-center mt-2 text-xs sm:text-sm text-gray-600">
+              <span className="hidden sm:inline">
+                Page {pagination.page} of {pagination.pages} | Total Jobs: {pagination.total}
+              </span>
+              <span className="sm:hidden">
+                {pagination.page}/{pagination.pages} ({pagination.total} jobs)
+              </span>
             </div>
           </div>
         )}
@@ -1469,4 +2088,3 @@ const Jobs = () => {
 }
 
 export default Jobs
-

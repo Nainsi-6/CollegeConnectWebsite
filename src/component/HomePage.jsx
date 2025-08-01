@@ -3773,6 +3773,1700 @@
 // ???????????????????????????????????????????????
 
 
+// "use client"
+
+// import { useState, useEffect } from "react"
+// import { useNavigate, useLocation } from "react-router-dom"
+// import Navbar from "./Navbar"
+// import { useUser } from "../contexts/UserContext"
+// import ProfileSection from "./ProfileSection"
+// import PostActionsDropdown from "./PostActionsDropdown"
+// import MessageNotification from "./MessageNotification"
+// import ImageModal from "./ImageModal"
+// import ForwardPostModal from "./ForwardPostModal"
+// import PostImageDisplay from "./PostImageDisplay"
+// import CreatePostButton from "./CreatePostButton"
+
+// const HomePage = () => {
+//   const [posts, setPosts] = useState([])
+//   const [announcements, setAnnouncements] = useState([])
+//   const [achievements, setAchievements] = useState([])
+//   const [showModal, setShowModal] = useState(false)
+//   const [modalContent, setModalContent] = useState("")
+//   const [modalType, setModalType] = useState("")
+//   const [loading, setLoading] = useState({
+//     posts: false,
+//     announcements: false,
+//     achievements: false,
+//   })
+//   const [error, setError] = useState({
+//     posts: null,
+//     announcements: null,
+//     achievements: null,
+//   })
+
+//   const { user } = useUser()
+//   const navigate = useNavigate()
+//   const location = useLocation()
+//   const [showComments, setShowComments] = useState({})
+//   const [isDeleting, setIsDeleting] = useState(false)
+//   const [showImageModal, setShowImageModal] = useState(false)
+//   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+//   const [showPostImageModal, setShowPostImageModal] = useState(false)
+//   const [currentPostId, setCurrentPostId] = useState(null)
+//   const [currentPostImages, setCurrentPostImages] = useState([])
+//   const [showForwardModal, setShowForwardModal] = useState(false)
+//   const [postToForward, setPostToForward] = useState(null)
+
+//   // Fetch data from backend on component mount
+//   useEffect(() => {
+//     fetchAnnouncements()
+//     fetchAchievements()
+//     fetchPosts()
+//   }, [])
+
+//   // Handle forwarded post from location state
+//   useEffect(() => {
+//     if (location.state?.forwardPost) {
+//       const postId = location.state.forwardPost
+//       const post = posts.find((p) => p._id === postId)
+//       if (post) {
+//         setPostToForward(post)
+//         setShowForwardModal(true)
+//       }
+//       // Clear the state
+//       navigate(location.pathname, { replace: true })
+//     }
+//   }, [location.state, posts, navigate])
+
+//   const fetchAnnouncements = async () => {
+//     setLoading((prev) => ({ ...prev, announcements: true }))
+//     setError((prev) => ({ ...prev, announcements: null }))
+
+//     try {
+//       const response = await fetch("http://localhost:5005/api/announcements")
+//       if (!response.ok) {
+//         throw new Error(`Failed to fetch announcements: ${response.statusText}`)
+//       }
+//       const data = await response.json()
+//       setAnnouncements(data.map((item) => `📌 ${item.description}`))
+//     } catch (err) {
+//       setError((prev) => ({ ...prev, announcements: err.message }))
+//       console.error("Error fetching announcements:", err)
+//     } finally {
+//       setLoading((prev) => ({ ...prev, announcements: false }))
+//     }
+//   }
+
+//   const fetchAchievements = async () => {
+//     setLoading((prev) => ({ ...prev, achievements: true }))
+//     setError((prev) => ({ ...prev, achievements: null }))
+
+//     try {
+//       const response = await fetch("http://localhost:5005/api/achievements")
+//       if (!response.ok) {
+//         throw new Error(`Failed to fetch achievements: ${response.statusText}`)
+//       }
+//       const data = await response.json()
+//       setAchievements(data.map((item) => `🎉 ${item.description}`))
+//     } catch (err) {
+//       setError((prev) => ({ ...prev, achievements: err.message }))
+//       console.error("Error fetching achievements:", err)
+//     } finally {
+//       setLoading((prev) => ({ ...prev, achievements: false }))
+//     }
+//   }
+
+//   const addAnnouncementAPI = async (description) => {
+//     try {
+//       const response = await fetch("http://localhost:5005/api/announcements", {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ description }),
+//       })
+
+//       if (!response.ok) {
+//         throw new Error(`Failed to add announcement: ${response.statusText}`)
+//       }
+
+//       return response.json()
+//     } catch (error) {
+//       console.error("Error adding announcement:", error)
+//       return null
+//     }
+//   }
+
+//   const addAchievementAPI = async (description) => {
+//     try {
+//       const response = await fetch("http://localhost:5005/api/achievements", {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ description }),
+//       })
+
+//       if (!response.ok) {
+//         throw new Error(`Failed to add achievement: ${response.statusText}`)
+//       }
+
+//       return response.json()
+//     } catch (error) {
+//       console.error("Error adding achievement:", error)
+//       return null
+//     }
+//   }
+
+//   const handleExploreEvents = () => {
+//     navigate("/events")
+//   }
+
+//   const openModal = (type) => {
+//     setModalType(type)
+//     setShowModal(true)
+//   }
+
+//   const closeModal = () => {
+//     setShowModal(false)
+//     setModalContent("")
+//   }
+
+//   const submitModal = async () => {
+//     if (!modalContent.trim()) return
+
+//     try {
+//       if (modalType === "announcement") {
+//         await addAnnouncementAPI(modalContent)
+//         await fetchAnnouncements()
+//       } else {
+//         await addAchievementAPI(modalContent)
+//         await fetchAchievements()
+//       }
+//       closeModal()
+//     } catch (error) {
+//       console.error("Error: Submission failed.", error)
+//     }
+//   }
+
+//   const fetchPosts = async () => {
+//     setLoading((prev) => ({ ...prev, posts: true }))
+//     setError((prev) => ({ ...prev, posts: null }))
+
+//     try {
+//       const res = await fetch("http://localhost:5005/api/posts")
+//       if (!res.ok) {
+//         throw new Error(`Failed to fetch posts: ${res.statusText}`)
+//       }
+//       const data = await res.json()
+//       setPosts(data)
+//     } catch (err) {
+//       setError((prev) => ({ ...prev, posts: err.message }))
+//       console.error("Error fetching posts:", err)
+//     } finally {
+//       setLoading((prev) => ({ ...prev, posts: false }))
+//     }
+//   }
+
+//   const createPost = async (postData) => {
+//     if (!user) {
+//       alert("Please log in to create a post")
+//       return
+//     }
+
+//     setLoading((prev) => ({ ...prev, posts: true }))
+
+//     const formData = new FormData()
+//     formData.append("content", postData.content)
+//     formData.append("userId", user._id)
+//     formData.append("username", user.name)
+
+//     postData.images.forEach((img) => {
+//       formData.append("images", img)
+//     })
+
+//     try {
+//       const response = await fetch("http://localhost:5005/api/posts", {
+//         method: "POST",
+//         body: formData,
+//       })
+
+//       if (!response.ok) {
+//         const errorData = await response.json()
+//         throw new Error(errorData.error || `Failed to create post: ${response.status}`)
+//       }
+
+//       await fetchPosts()
+//     } catch (err) {
+//       console.error("Error creating post:", err)
+//       alert("Failed to create post: " + err.message)
+//     } finally {
+//       setLoading((prev) => ({ ...prev, posts: false }))
+//     }
+//   }
+
+//   const handleLikePost = async (postId) => {
+//     if (!user) {
+//       alert("Please log in to like posts")
+//       return
+//     }
+
+//     try {
+//       const res = await fetch(`http://localhost:5005/api/posts/${postId}/like`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ userId: user._id }),
+//       })
+
+//       if (!res.ok) {
+//         throw new Error("Failed to like post")
+//       }
+
+//       const updatedPost = await res.json()
+//       setPosts((prevPosts) => prevPosts.map((post) => (post._id === postId ? updatedPost : post)))
+//     } catch (err) {
+//       console.error("Error liking post:", err)
+//     }
+//   }
+
+//   const handleDislikePost = async (postId) => {
+//     if (!user) {
+//       alert("Please log in to dislike posts")
+//       return
+//     }
+
+//     try {
+//       const res = await fetch(`http://localhost:5005/api/posts/${postId}/dislike`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ userId: user._id }),
+//       })
+
+//       if (!res.ok) {
+//         throw new Error("Failed to dislike post")
+//       }
+
+//       const updatedPost = await res.json()
+//       setPosts((prevPosts) => prevPosts.map((post) => (post._id === postId ? updatedPost : post)))
+//     } catch (err) {
+//       console.error("Error disliking post:", err)
+//     }
+//   }
+
+//   const handleAddComment = async (postId, text) => {
+//     if (!user) {
+//       alert("Please log in to comment")
+//       return
+//     }
+
+//     if (!text.trim()) return
+
+//     try {
+//       const res = await fetch(`http://localhost:5005/api/posts/${postId}/comment`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({
+//           text,
+//           userId: user._id,
+//           username: user.name,
+//         }),
+//       })
+
+//       if (!res.ok) {
+//         throw new Error("Failed to add comment")
+//       }
+
+//       const updatedPost = await res.json()
+//       setPosts((prevPosts) => prevPosts.map((post) => (post._id === postId ? updatedPost : post)))
+//     } catch (err) {
+//       console.error("Error adding comment:", err)
+//     }
+//   }
+
+//   const handleDeletePost = async (postId) => {
+//     if (!user) return
+
+//     if (!window.confirm("Are you sure you want to delete this post?")) {
+//       return
+//     }
+
+//     setIsDeleting(true)
+
+//     try {
+//       const res = await fetch(`http://localhost:5005/api/posts/${postId}`, {
+//         method: "DELETE",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ userId: user._id }),
+//       })
+
+//       if (!res.ok) {
+//         const errorData = await res.json()
+//         throw new Error(errorData.error || "Failed to delete post")
+//       }
+
+//       setPosts((prevPosts) => prevPosts.filter((post) => post._id !== postId))
+//     } catch (err) {
+//       console.error("Error deleting post:", err)
+//       alert("Failed to delete post: " + err.message)
+//     } finally {
+//       setIsDeleting(false)
+//     }
+//   }
+
+//   const handleReportPost = async (postId) => {
+//     if (!user) {
+//       alert("Please log in to report posts")
+//       return
+//     }
+
+//     const reason = prompt("Please provide a reason for reporting this post:")
+//     if (!reason) return
+
+//     try {
+//       const response = await fetch(`http://localhost:5005/api/posts/${postId}/report`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ userId: user._id, reason }),
+//       })
+
+//       if (response.ok) {
+//         alert("Post reported successfully")
+//       } else {
+//         alert("Failed to report post")
+//       }
+//     } catch (error) {
+//       console.error("Error reporting post:", error)
+//       alert("Failed to report post")
+//     }
+//   }
+
+//   const handleSavePost = async (postId) => {
+//     if (!user) {
+//       alert("Please log in to save posts")
+//       return
+//     }
+
+//     try {
+//       const response = await fetch(`http://localhost:5005/api/posts/${postId}/save`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ userId: user._id }),
+//       })
+
+//       if (response.ok) {
+//         alert("Post saved successfully!")
+//       } else {
+//         const errorData = await response.json()
+//         if (errorData.error === "Post already saved") {
+//           alert("You have already saved this post")
+//         } else {
+//           alert("Failed to save post")
+//         }
+//       }
+//     } catch (error) {
+//       console.error("Error saving post:", error)
+//       alert("Failed to save post")
+//     }
+//   }
+
+//   const handleForwardPost = (post) => {
+//     setPostToForward(post)
+//     setShowForwardModal(true)
+//   }
+
+//   const handleForwardComplete = (conversation) => {
+//     alert(`Post forwarded to ${conversation.participants?.find((p) => p._id !== user._id)?.name || "user"}`)
+//     setShowForwardModal(false)
+//     setPostToForward(null)
+//   }
+
+//   const handleUserClick = (userId) => {
+//     if (userId) {
+//       navigate(`/profile/${userId}`)
+//     }
+//   }
+
+//   const openPostImageModal = (post, imageIndex = 0) => {
+//     setCurrentPostImages(post.images || [])
+//     setCurrentImageIndex(imageIndex)
+//     setCurrentPostId(post._id)
+//     setShowPostImageModal(true)
+//   }
+
+//   return (
+//     <div className="min-h-screen bg-gray-900 text-gray-100">
+//       <Navbar />
+
+//       {user && (
+//         <div className="fixed top-4 right-4 z-50">
+//           <MessageNotification userId={user._id} token={localStorage.getItem("token") || ""} />
+//         </div>
+//       )}
+// <div className="container mx-auto py-20 px-8 grid grid-cols-1 md:grid-cols-4 gap-6 relative">
+
+//   {/* Left Sidebar */}
+//   <div className="hidden md:block md:col-span-1 sticky top-20 self-start max-h-[80vh] overflow-y-auto overflow-x-hidden pr-2 scrollbar-thin scrollbar-thumb-indigo-600 scrollbar-track-indigo-200">
+    
+//     {/* Announcements Section */}
+//     <div className="bg-indigo-300 p-5 rounded-xl shadow-md">
+//       <div className="flex justify-between items-center">
+//         <h3 className="text-xl font-bold text-indigo-900">📢 Announcements</h3>
+//      {user && (
+//   <button
+//     onClick={() => openModal("announcement")}
+//     className="text-sm font-semibold text-white px-4 py-2 rounded-md 
+//                bg-gradient-to-r from-indigo-600 to-purple-600 
+//                hover:from-indigo-700 hover:to-purple-700 
+//                shadow-md transition-all duration-200 hover:scale-[1.03]"
+//   >
+//     Add
+//   </button>
+// )}
+
+//       </div>
+//       {loading.announcements ? (
+//         <p className="text-indigo-900 mt-3 font-medium">Loading announcements...</p>
+//       ) : error.announcements ? (
+//         <p className="text-red-600 mt-3 font-semibold">Error: {error.announcements}</p>
+//       ) : (
+//         <div className="mt-3 text-indigo-900 space-y-2 font-medium break-words">
+//           {announcements.map((item, index) => (
+//             <div key={index} className="bg-white bg-opacity-60 p-2 rounded-md shadow-sm">{item}</div>
+//           ))}
+//         </div>
+//       )}
+//     </div>
+
+//     {/* Achievements Section */}
+//     <div className="bg-purple-300 mt-6 p-5 rounded-xl shadow-md">
+//       <div className="flex justify-between items-center">
+//         <h3 className="text-xl font-bold text-purple-900">🏆 Achievements</h3>
+//        {user && (
+//   <button
+//     onClick={() => openModal("achievement")}
+//     className="text-sm font-semibold text-white px-4 py-2 rounded-md 
+//                bg-gradient-to-r from-indigo-600 to-purple-600 
+//                hover:from-indigo-700 hover:to-purple-700 
+//                shadow-md transition-all duration-200 hover:scale-[1.03]"
+//   >
+//     Add
+//   </button>
+// )}
+
+//       </div>
+//       {loading.achievements ? (
+//         <p className="text-purple-900 mt-3 font-medium">Loading achievements...</p>
+//       ) : error.achievements ? (
+//         <p className="text-red-600 mt-3 font-semibold">Error: {error.achievements}</p>
+//       ) : (
+//         <div className="mt-3 text-purple-900 space-y-2 font-medium break-words">
+//           {achievements.map((item, index) => (
+//             <div key={index} className="bg-white bg-opacity-60 p-2 rounded-md shadow-sm">{item}</div>
+//           ))}
+//         </div>
+//       )}
+//     </div>
+
+//   </div>
+
+
+
+
+
+
+
+
+
+
+
+//         {/* Main Feed */}
+//         <div className="md:col-span-2 px-5 rounded-2xl">
+//           {/* Enhanced Create Post Button */}
+        
+
+//           {loading.posts ? (
+//             <div className="flex justify-center items-center h-36 rounded-xl">
+//               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-300"></div>
+//             </div>
+//           ) : error.posts ? (
+//             <div className="bg-red-500 text-white p-4 rounded-lg mb-4">Error loading posts: {error.posts}</div>
+//           ) : posts.length === 0 ? (
+//             <div className="bg-indigo-800 p-5 rounded-lg shadow-md mb-5 text-center">
+//               <p className="text-indigo-200">No posts yet. Be the first to post!</p>
+//             </div>
+//           ) : (
+//             posts.map((post) => (
+//               <div
+//                 key={post._id}
+//                className="bg-gray-700 rounded-xl shadow-md mb-5 max-w-full mx-auto hover:shadow-lg transition-shadow"
+//               >
+//        <div className="flex items-center justify-between mb-2 p-1 rounded-b-lg bg-gradient-to-br from-indigo-300 to-indigo-200  shadow-md">
+//   <div className="flex items-center gap-3 p-1">
+//     <div
+//       className="w-10 h-10 rounded-full bg-gray-400 font-bold flex items-center justify-center overflow-hidden border-2 border-white shadow-sm cursor-pointer transition-transform hover:scale-105 "
+//       onClick={() => handleUserClick(post.userId?._id || post.userId)}
+//     >
+//       {post.userId && post.userId.image ? (
+//         <img
+//           src={post.userId.image || "/placeholder.svg?height=40&width=40"}
+//           alt={post.userId.name || "User"}
+//           className="w-full h-full object-cover"
+//           onError={(e) => {
+//             e.target.src = "/placeholder.svg?height=40&width=40"
+//           }}
+//         />
+//       ) : (
+//         <span className="text-2xl text-gray-600">👤</span>
+//       )}
+//     </div>
+
+//     <div>
+//       <p
+//         className="font-bold text-gray-800  cursor-pointer hover:text-indigo-700 transition-colors"
+//         onClick={() => handleUserClick(post.userId?._id || post.userId)}
+//       >
+//         {post.userId?.name || post.username || "User"}
+//       </p>
+//       <p className="text-xs text-indigo-900 font-medium opacity-90">
+//         {new Date(post.createdAt).toLocaleString()}
+//       </p>
+//     </div>
+//   </div>
+
+//   <PostActionsDropdown
+//     post={post}
+//     currentUser={user}
+//     onDelete={handleDeletePost}
+//     onReport={handleReportPost}
+//     onSave={handleSavePost}
+//     onForward={handleForwardPost}
+//   />
+// </div>
+
+
+//                 {post.title && <h3 className="text-lg font-semibold mb-2">{post.title}</h3>}
+
+//                 <div className="text-indigo-100 whitespace-pre-wrap break-words overflow-wrap-anywhere p-2">
+//                   {post.content}
+//                 </div>
+
+//                 {/* Improved Image Display */}
+//                 <PostImageDisplay
+//                   images={post.images}
+//                   onImageClick={(imageIndex) => openPostImageModal(post, imageIndex)}
+//                   onViewAllClick={(imageIndex) => openPostImageModal(post, imageIndex)}
+//                 />
+
+//                 {/* Like, dislike, comment buttons */}
+//                 <div className="flex gap-3 mt-3 p-2 bg-gray-800 rounded-b-xl">
+//                   <button
+//                     onClick={() => handleLikePost(post._id)}
+//                     className={`flex items-center gap-1 px-2 py-1 rounded ${
+//                       post.likes?.includes(user?._id)
+//                         ? "bg-indigo-700 text-white"
+//                         : "text-indigo-300 hover:text-indigo-200"
+//                     } transition-colors`}
+//                   >
+//                     👍 {post.likes?.length || 0}
+//                   </button>
+
+//                   <button
+//                     onClick={() => handleDislikePost(post._id)}
+//                     className={`flex items-center gap-1 px-2 py-1 rounded ${
+//                       post.dislikes?.includes(user?._id) ? "bg-red-600 text-white" : "text-red-300 hover:text-red-200"
+//                     } transition-colors`}
+//                   >
+//                     👎 {post.dislikes?.length || 0}
+//                   </button>
+
+//                   <button
+//                     onClick={() =>
+//                       setShowComments((prev) => ({
+//                         ...prev,
+//                         [post._id]: !prev[post._id],
+//                       }))
+//                     }
+//                     className="text-indigo-300 hover:text-indigo-200 flex items-center gap-1 transition-colors"
+//                   >
+//                     💬 {post.comments?.length || 0} Comments
+//                   </button>
+//                 </div>
+
+//                 {/* Comments section */}
+//                 {showComments[post._id] && (
+//                   <div className="mt-4 bg-gray-600 p-3 rounded-lg">
+//                     <h4 className="text-white mb-2 font-medium">Comments</h4>
+//                     {post.comments && post.comments.length > 0 ? (
+//                       <div className="space-y-2 max-h-60 overflow-y-auto">
+//                         {post.comments.map((comment, cIndex) => (
+//                           <div key={cIndex} className="bg-gray-800 p-2 rounded">
+//                             <div className="flex items-center gap-2 mb-1">
+//                               <span className="font-semibold text-sm text-white">{comment.username || "User"}</span>
+//                               <span className="text-xs text-indigo-100">
+//                                 {new Date(comment.createdAt).toLocaleString()}
+//                               </span>
+//                             </div>
+//                             <p className="text-white text-sm font-thin break-words">{comment.text}</p>
+//                           </div>
+//                         ))}
+//                       </div>
+//                     ) : (
+//                       <p className="text-indigo-300 text-sm">No comments yet</p>
+//                     )}
+
+//                     {user ? (
+//                       <form
+//                         className="mt-3"
+//                         onSubmit={(e) => {
+//                           e.preventDefault()
+//                           const form = e.target
+//                           const commentInput = form.elements.commentText
+//                           handleAddComment(post._id, commentInput.value)
+//                           commentInput.value = ""
+//                         }}
+//                       >
+//                         <div className="flex gap-2">
+//                           <input
+//                             name="commentText"
+//                             className="flex-1 bg-indigo-800 border border-indigo-600 rounded-lg p-2 text-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+//                             placeholder="Add a comment..."
+//                             required
+//                           />
+//                           <button
+//                             type="submit"
+//                             className="bg-indigo-400 hover:bg-blue-300 text-gray-800 px-2 rounded-xl font-sans text-sm font-semibold transition-colors"
+//                           >
+//                             Comment
+//                           </button>
+//                         </div>
+//                       </form>
+//                     ) : (
+//                       <p className="text-red-300 mt-2 text-sm">Log in to comment.</p>
+//                     )}
+//                   </div>
+//                 )}
+//               </div>
+//             ))
+//           )}
+//         </div>
+
+// {/* Right Sidebar */}
+// <div className="hidden md:block md:col-span-1 p-6">
+//   <div className="fixed top-20 right-4 w-[calc(28%-4rem)] max-h-screen mb-6 z-10">
+//     <div>
+//       <ProfileSection />
+//     </div>
+   
+//     {/* Scrollable inner content */}
+//     <div className="mt-4 max-h-[60vh] overflow-y-auto overflow-x-hidden pr-1 scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-indigo-100">
+      
+//       {user && (
+//         <div className="mb-4">
+//           <CreatePostButton onCreatePost={createPost} loading={loading.posts} user={user} />
+//         </div>
+//       )}
+
+//       <div
+//         className="bg-indigo-500 mb-10 p-5 rounded-lg shadow-md cursor-pointer hover:bg-indigo-600 transition-colors"
+//         onClick={handleExploreEvents}
+//       >
+//         <h3 className="text-lg font-semibold text-white">🌟 Explore Events</h3>
+//         <p className="mt-2 text-white break-words">
+//           Check out the latest events happening!
+//         </p>
+//       </div>
+
+//     </div>
+//   </div>
+// </div>
+//       </div>
+
+//       {/* Modals */}
+//       {showModal && (
+//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+//           <div className="bg-indigo-800 p-6 rounded-lg shadow-xl max-w-md w-full">
+//             <h3 className="text-xl font-semibold text-white mb-4">
+//               Add {modalType === "announcement" ? "Announcement" : "Achievement"}
+//             </h3>
+//             <textarea
+//               className="w-full bg-indigo-700 border border-indigo-600 rounded-lg p-3 text-indigo-100 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+//               placeholder={`Enter ${modalType === "announcement" ? "announcement" : "achievement"} description...`}
+//               value={modalContent}
+//               onChange={(e) => setModalContent(e.target.value)}
+//               rows={4}
+//             />
+//             <div className="flex justify-end gap-3">
+//               <button
+//                 onClick={closeModal}
+//                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors"
+//               >
+//                 Cancel
+//               </button>
+//               <button
+//                 onClick={submitModal}
+//                 className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition-colors"
+//               >
+//                 Submit
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+
+//       {/* Image Modals */}
+//       <ImageModal
+//         images={currentPostImages}
+//         currentIndex={currentImageIndex}
+//         isOpen={showPostImageModal}
+//         onClose={() => setShowPostImageModal(false)}
+//         onIndexChange={setCurrentImageIndex}
+//       />
+
+//       {/* Forward Post Modal */}
+//       <ForwardPostModal
+//         isOpen={showForwardModal}
+//         onClose={() => {
+//           setShowForwardModal(false)
+//           setPostToForward(null)
+//         }}
+//         onForward={handleForwardComplete}
+//         post={postToForward}
+//       />
+//     </div>
+//   )
+// }
+
+// export default HomePage
+
+
+// "use client"
+
+// import { useState, useEffect } from "react"
+// import { useNavigate, useLocation } from "react-router-dom"
+// import Navbar from "./Navbar"
+// import { useUser } from "../contexts/UserContext"
+// import ProfileSection from "./ProfileSection"
+// import PostActionsDropdown from "./PostActionsDropdown"
+// import MessageNotification from "./MessageNotification"
+// import ImageModal from "./ImageModal"
+// import ForwardPostModal from "./ForwardPostModal"
+// import PostImageDisplay from "./PostImageDisplay"
+// import CreatePostButton from "./CreatePostButton"
+
+// const HomePage = () => {
+//   const [posts, setPosts] = useState([])
+//   const [announcements, setAnnouncements] = useState([])
+//   const [achievements, setAchievements] = useState([])
+//   const [showModal, setShowModal] = useState(false)
+//   const [modalContent, setModalContent] = useState("")
+//   const [modalType, setModalType] = useState("")
+//   const [loading, setLoading] = useState({
+//     posts: false,
+//     announcements: false,
+//     achievements: false,
+//   })
+//   const [error, setError] = useState({
+//     posts: null,
+//     announcements: null,
+//     achievements: null,
+//   })
+//   const { user } = useUser()
+//   const navigate = useNavigate()
+//   const location = useLocation()
+//   const [showComments, setShowComments] = useState({})
+//   const [isDeleting, setIsDeleting] = useState(false)
+//   const [showImageModal, setShowImageModal] = useState(false)
+//   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+//   const [showPostImageModal, setShowPostImageModal] = useState(false)
+//   const [currentPostId, setCurrentPostId] = useState(null)
+//   const [currentPostImages, setCurrentPostImages] = useState([])
+//   const [showForwardModal, setShowForwardModal] = useState(false)
+//   const [postToForward, setPostToForward] = useState(null)
+
+//   // Fetch data from backend on component mount
+//   useEffect(() => {
+//     fetchAnnouncements()
+//     fetchAchievements()
+//     fetchPosts()
+//   }, [])
+
+//   // Handle forwarded post from location state
+//   useEffect(() => {
+//     if (location.state?.forwardPost) {
+//       const postId = location.state.forwardPost
+//       const post = posts.find((p) => p._id === postId)
+//       if (post) {
+//         setPostToForward(post)
+//         setShowForwardModal(true)
+//       }
+//       navigate(location.pathname, { replace: true })
+//     }
+//   }, [location.state, posts, navigate])
+
+//   const fetchAnnouncements = async () => {
+//     setLoading((prev) => ({ ...prev, announcements: true }))
+//     setError((prev) => ({ ...prev, announcements: null }))
+//     try {
+//       const response = await fetch("http://localhost:5005/api/announcements")
+//       if (!response.ok) {
+//         throw new Error(`Failed to fetch announcements: ${response.statusText}`)
+//       }
+//       const data = await response.json()
+//       setAnnouncements(data.map((item) => `📌 ${item.description}`))
+//     } catch (err) {
+//       setError((prev) => ({ ...prev, announcements: err.message }))
+//       console.error("Error fetching announcements:", err)
+//     } finally {
+//       setLoading((prev) => ({ ...prev, announcements: false }))
+//     }
+//   }
+
+//   const fetchAchievements = async () => {
+//     setLoading((prev) => ({ ...prev, achievements: true }))
+//     setError((prev) => ({ ...prev, achievements: null }))
+//     try {
+//       const response = await fetch("http://localhost:5005/api/achievements")
+//       if (!response.ok) {
+//         throw new Error(`Failed to fetch achievements: ${response.statusText}`)
+//       }
+//       const data = await response.json()
+//       setAchievements(data.map((item) => `🎉 ${item.description}`))
+//     } catch (err) {
+//       setError((prev) => ({ ...prev, achievements: err.message }))
+//       console.error("Error fetching achievements:", err)
+//     } finally {
+//       setLoading((prev) => ({ ...prev, achievements: false }))
+//     }
+//   }
+
+//   const addAnnouncementAPI = async (description) => {
+//     try {
+//       const response = await fetch("http://localhost:5005/api/announcements", {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ description }),
+//       })
+//       if (!response.ok) {
+//         throw new Error(`Failed to add announcement: ${response.statusText}`)
+//       }
+//       return response.json()
+//     } catch (error) {
+//       console.error("Error adding announcement:", error)
+//       return null
+//     }
+//   }
+
+//   const addAchievementAPI = async (description) => {
+//     try {
+//       const response = await fetch("http://localhost:5005/api/achievements", {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ description }),
+//       })
+//       if (!response.ok) {
+//         throw new Error(`Failed to add achievement: ${response.statusText}`)
+//       }
+//       return response.json()
+//     } catch (error) {
+//       console.error("Error adding achievement:", error)
+//       return null
+//     }
+//   }
+
+//   const handleExploreEvents = () => {
+//     navigate("/events")
+//   }
+
+//   const openModal = (type) => {
+//     setModalType(type)
+//     setShowModal(true)
+//   }
+
+//   const closeModal = () => {
+//     setShowModal(false)
+//     setModalContent("")
+//   }
+
+//   const submitModal = async () => {
+//     if (!modalContent.trim()) return
+
+//     try {
+//       if (modalType === "announcement") {
+//         await addAnnouncementAPI(modalContent)
+//         await fetchAnnouncements()
+//       } else {
+//         await addAchievementAPI(modalContent)
+//         await fetchAchievements()
+//       }
+//       closeModal()
+//     } catch (error) {
+//       console.error("Error: Submission failed.", error)
+//     }
+//   }
+
+//   const fetchPosts = async () => {
+//     setLoading((prev) => ({ ...prev, posts: true }))
+//     setError((prev) => ({ ...prev, posts: null }))
+//     try {
+//       const res = await fetch("http://localhost:5005/api/posts")
+//       if (!res.ok) {
+//         throw new Error(`Failed to fetch posts: ${res.statusText}`)
+//       }
+//       const data = await res.json()
+//       setPosts(data)
+//     } catch (err) {
+//       setError((prev) => ({ ...prev, posts: err.message }))
+//       console.error("Error fetching posts:", err)
+//     } finally {
+//       setLoading((prev) => ({ ...prev, posts: false }))
+//     }
+//   }
+
+//   const createPost = async (postData) => {
+//     if (!user) {
+//       alert("Please log in to create a post")
+//       return
+//     }
+
+//     setLoading((prev) => ({ ...prev, posts: true }))
+//     const formData = new FormData()
+//     formData.append("content", postData.content)
+//     formData.append("userId", user._id)
+//     formData.append("username", user.name)
+
+//     postData.images.forEach((img) => {
+//       formData.append("images", img)
+//     })
+
+//     try {
+//       const response = await fetch("http://localhost:5005/api/posts", {
+//         method: "POST",
+//         body: formData,
+//       })
+//       if (!response.ok) {
+//         const errorData = await response.json()
+//         throw new Error(errorData.error || `Failed to create post: ${response.status}`)
+//       }
+//       await fetchPosts()
+//     } catch (err) {
+//       console.error("Error creating post:", err)
+//       alert("Failed to create post: " + err.message)
+//     } finally {
+//       setLoading((prev) => ({ ...prev, posts: false }))
+//     }
+//   }
+
+//   const handleLikePost = async (postId) => {
+//     if (!user) {
+//       alert("Please log in to like posts")
+//       return
+//     }
+
+//     try {
+//       const res = await fetch(`http://localhost:5005/api/posts/${postId}/like`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ userId: user._id }),
+//       })
+//       if (!res.ok) {
+//         throw new Error("Failed to like post")
+//       }
+//       const updatedPost = await res.json()
+//       setPosts((prevPosts) => prevPosts.map((post) => (post._id === postId ? updatedPost : post)))
+//     } catch (err) {
+//       console.error("Error liking post:", err)
+//     }
+//   }
+
+//   const handleDislikePost = async (postId) => {
+//     if (!user) {
+//       alert("Please log in to dislike posts")
+//       return
+//     }
+
+//     try {
+//       const res = await fetch(`http://localhost:5005/api/posts/${postId}/dislike`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ userId: user._id }),
+//       })
+//       if (!res.ok) {
+//         throw new Error("Failed to dislike post")
+//       }
+//       const updatedPost = await res.json()
+//       setPosts((prevPosts) => prevPosts.map((post) => (post._id === postId ? updatedPost : post)))
+//     } catch (err) {
+//       console.error("Error disliking post:", err)
+//     }
+//   }
+
+//   const handleAddComment = async (postId, text) => {
+//     if (!user) {
+//       alert("Please log in to comment")
+//       return
+//     }
+
+//     if (!text.trim()) return
+
+//     try {
+//       const res = await fetch(`http://localhost:5005/api/posts/${postId}/comment`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({
+//           text,
+//           userId: user._id,
+//           username: user.name,
+//         }),
+//       })
+//       if (!res.ok) {
+//         throw new Error("Failed to add comment")
+//       }
+//       const updatedPost = await res.json()
+//       setPosts((prevPosts) => prevPosts.map((post) => (post._id === postId ? updatedPost : post)))
+//     } catch (err) {
+//       console.error("Error adding comment:", err)
+//     }
+//   }
+
+//   const handleDeletePost = async (postId) => {
+//     if (!user) return
+
+//     if (!window.confirm("Are you sure you want to delete this post?")) {
+//       return
+//     }
+
+//     setIsDeleting(true)
+//     try {
+//       const res = await fetch(`http://localhost:5005/api/posts/${postId}`, {
+//         method: "DELETE",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ userId: user._id }),
+//       })
+//       if (!res.ok) {
+//         const errorData = await res.json()
+//         throw new Error(errorData.error || "Failed to delete post")
+//       }
+//       setPosts((prevPosts) => prevPosts.filter((post) => post._id !== postId))
+//     } catch (err) {
+//       console.error("Error deleting post:", err)
+//       alert("Failed to delete post: " + err.message)
+//     } finally {
+//       setIsDeleting(false)
+//     }
+//   }
+
+//   const handleReportPost = async (postId) => {
+//     if (!user) {
+//       alert("Please log in to report posts")
+//       return
+//     }
+
+//     const reason = prompt("Please provide a reason for reporting this post:")
+//     if (!reason) return
+
+//     try {
+//       const response = await fetch(`http://localhost:5005/api/posts/${postId}/report`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ userId: user._id, reason }),
+//       })
+//       if (response.ok) {
+//         alert("Post reported successfully")
+//       } else {
+//         alert("Failed to report post")
+//       }
+//     } catch (error) {
+//       console.error("Error reporting post:", error)
+//       alert("Failed to report post")
+//     }
+//   }
+
+//   const handleSavePost = async (postId) => {
+//     if (!user) {
+//       alert("Please log in to save posts")
+//       return
+//     }
+
+//     try {
+//       const response = await fetch(`http://localhost:5005/api/posts/${postId}/save`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ userId: user._id }),
+//       })
+//       if (response.ok) {
+//         alert("Post saved successfully!")
+//       } else {
+//         const errorData = await response.json()
+//         if (errorData.error === "Post already saved") {
+//           alert("You have already saved this post")
+//         } else {
+//           alert("Failed to save post")
+//         }
+//       }
+//     } catch (error) {
+//       console.error("Error saving post:", error)
+//       alert("Failed to save post")
+//     }
+//   }
+
+//   const handleForwardPost = (post) => {
+//     setPostToForward(post)
+//     setShowForwardModal(true)
+//   }
+
+//   const handleForwardComplete = (conversation) => {
+//     alert(`Post forwarded to ${conversation.participants?.find((p) => p._id !== user._id)?.name || "user"}`)
+//     setShowForwardModal(false)
+//     setPostToForward(null)
+//   }
+
+//   const handleUserClick = (userId) => {
+//     if (userId) {
+//       navigate(`/profile/${userId}`)
+//     }
+//   }
+
+//   const openPostImageModal = (post, imageIndex = 0) => {
+//     setCurrentPostImages(post.images || [])
+//     setCurrentImageIndex(imageIndex)
+//     setCurrentPostId(post._id)
+//     setShowPostImageModal(true)
+//   }
+
+//   return (
+//     <div className="min-h-screen bg-gray-900 text-gray-100">
+//       <Navbar />
+
+//       {user && (
+//         <div className="fixed top-4 right-4 z-50">
+//           <MessageNotification userId={user._id} token={localStorage.getItem("token") || ""} />
+//         </div>
+//       )}
+
+//       <div className="container mx-auto py-20 px-4 sm:px-6 lg:px-8">
+//         {/* Mobile Layout */}
+//         <div className="block lg:hidden space-y-6">
+//           {/* Mobile Create Post */}
+//           {user && (
+//             <div className="bg-gray-700 rounded-lg shadow-md p-4">
+//               <CreatePostButton onCreatePost={createPost} loading={loading.posts} user={user} />
+//             </div>
+//           )}
+
+//           {/* Mobile Announcements */}
+//           <div className="bg-indigo-300 p-4 rounded-xl shadow-md">
+//             <div className="flex justify-between items-center mb-3">
+//               <h3 className="text-lg font-bold text-indigo-900">📢 Announcements</h3>
+//               {user && (
+//                 <button
+//                   onClick={() => openModal("announcement")}
+//                   className="text-xs font-semibold text-white px-3 py-1 rounded-md bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+//                 >
+//                   Add
+//                 </button>
+//               )}
+//             </div>
+//             {loading.announcements ? (
+//               <p className="text-indigo-900 text-sm">Loading...</p>
+//             ) : error.announcements ? (
+//               <p className="text-red-600 text-sm">Error: {error.announcements}</p>
+//             ) : (
+//               <div className="space-y-2 text-indigo-900 text-sm">
+//                 {announcements.slice(0, 3).map((item, index) => (
+//                   <div key={index} className="bg-white bg-opacity-60 p-2 rounded-md">
+//                     {item}
+//                   </div>
+//                 ))}
+//               </div>
+//             )}
+//           </div>
+
+//           {/* Mobile Achievements */}
+//           <div className="bg-purple-300 p-4 rounded-xl shadow-md">
+//             <div className="flex justify-between items-center mb-3">
+//               <h3 className="text-lg font-bold text-purple-900">🏆 Achievements</h3>
+//               {user && (
+//                 <button
+//                   onClick={() => openModal("achievement")}
+//                   className="text-xs font-semibold text-white px-3 py-1 rounded-md bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+//                 >
+//                   Add
+//                 </button>
+//               )}
+//             </div>
+//             {loading.achievements ? (
+//               <p className="text-purple-900 text-sm">Loading...</p>
+//             ) : error.achievements ? (
+//               <p className="text-red-600 text-sm">Error: {error.achievements}</p>
+//             ) : (
+//               <div className="space-y-2 text-purple-900 text-sm">
+//                 {achievements.slice(0, 3).map((item, index) => (
+//                   <div key={index} className="bg-white bg-opacity-60 p-2 rounded-md">
+//                     {item}
+//                   </div>
+//                 ))}
+//               </div>
+//             )}
+//           </div>
+
+//           {/* Mobile Posts Feed */}
+//           <div className="space-y-4">
+//             {loading.posts ? (
+//               <div className="flex justify-center items-center h-36">
+//                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-300"></div>
+//               </div>
+//             ) : error.posts ? (
+//               <div className="bg-red-500 text-white p-4 rounded-lg text-sm">Error loading posts: {error.posts}</div>
+//             ) : posts.length === 0 ? (
+//               <div className="bg-indigo-800 p-4 rounded-lg shadow-md text-center">
+//                 <p className="text-indigo-200 text-sm">No posts yet. Be the first to post!</p>
+//               </div>
+//             ) : (
+//               posts.map((post) => (
+//                 <div key={post._id} className="bg-gray-700 rounded-xl shadow-md">
+//                   <div className="flex items-center justify-between mb-2 p-3 bg-gradient-to-br from-indigo-300 to-indigo-200 rounded-t-xl">
+//                     <div className="flex items-center gap-3">
+//                       <div
+//                         className="w-10 h-10 rounded-full bg-gray-400 font-bold flex items-center justify-center overflow-hidden border-2 border-white shadow-sm cursor-pointer"
+//                         onClick={() => handleUserClick(post.userId?._id || post.userId)}
+//                       >
+//                         {post.userId && post.userId.image ? (
+//                           <img
+//                             src={post.userId.image || "/placeholder.svg?height=40&width=40"}
+//                             alt={post.userId.name || "User"}
+//                             className="w-full h-full object-cover"
+//                             onError={(e) => {
+//                               e.target.src = "/placeholder.svg?height=40&width=40"
+//                             }}
+//                           />
+//                         ) : (
+//                           <span className="text-xl text-gray-600">👤</span>
+//                         )}
+//                       </div>
+//                       <div>
+//                         <p
+//                           className="font-bold text-gray-800 cursor-pointer hover:text-indigo-700 text-sm"
+//                           onClick={() => handleUserClick(post.userId?._id || post.userId)}
+//                         >
+//                           {post.userId?.name || post.username || "User"}
+//                         </p>
+//                         <p className="text-xs text-indigo-900 opacity-90">
+//                           {new Date(post.createdAt).toLocaleString()}
+//                         </p>
+//                       </div>
+//                     </div>
+//                     <PostActionsDropdown
+//                       post={post}
+//                       currentUser={user}
+//                       onDelete={handleDeletePost}
+//                       onReport={handleReportPost}
+//                       onSave={handleSavePost}
+//                       onForward={handleForwardPost}
+//                     />
+//                   </div>
+
+//                   {post.title && <h3 className="text-base font-semibold mb-2 px-3">{post.title}</h3>}
+                  
+//                   <div className="text-indigo-100 whitespace-pre-wrap break-words p-3 text-sm">
+//                     {post.content}
+//                   </div>
+
+//                   <PostImageDisplay
+//                     images={post.images}
+//                     onImageClick={(imageIndex) => openPostImageModal(post, imageIndex)}
+//                     onViewAllClick={(imageIndex) => openPostImageModal(post, imageIndex)}
+//                   />
+
+//                   {/* Mobile-optimized action buttons */}
+//                   <div className="flex gap-2 p-3 bg-gray-800 rounded-b-xl">
+//                     <button
+//                       onClick={() => handleLikePost(post._id)}
+//                       className={`flex items-center gap-1 px-3 py-2 rounded text-sm ${
+//                         post.likes?.includes(user?._id)
+//                           ? "bg-indigo-700 text-white"
+//                           : "text-indigo-300 hover:text-indigo-200"
+//                       }`}
+//                     >
+//                       👍 {post.likes?.length || 0}
+//                     </button>
+//                     <button
+//                       onClick={() => handleDislikePost(post._id)}
+//                       className={`flex items-center gap-1 px-3 py-2 rounded text-sm ${
+//                         post.dislikes?.includes(user?._id) ? "bg-red-600 text-white" : "text-red-300 hover:text-red-200"
+//                       }`}
+//                     >
+//                       👎 {post.dislikes?.length || 0}
+//                     </button>
+//                     <button
+//                       onClick={() =>
+//                         setShowComments((prev) => ({
+//                           ...prev,
+//                           [post._id]: !prev[post._id],
+//                         }))
+//                       }
+//                       className="text-indigo-300 hover:text-indigo-200 flex items-center gap-1 px-3 py-2 rounded text-sm"
+//                     >
+//                       💬 {post.comments?.length || 0}
+//                     </button>
+//                   </div>
+
+//                   {/* Comments section */}
+//                   {showComments[post._id] && (
+//                     <div className="p-3 bg-gray-600 rounded-b-lg">
+//                       <h4 className="text-white mb-2 font-medium text-sm">Comments</h4>
+//                       {post.comments && post.comments.length > 0 ? (
+//                         <div className="space-y-2 max-h-48 overflow-y-auto">
+//                           {post.comments.map((comment, cIndex) => (
+//                             <div key={cIndex} className="bg-gray-800 p-2 rounded text-sm">
+//                               <div className="flex items-center gap-2 mb-1">
+//                                 <span className="font-semibold text-white text-xs">{comment.username || "User"}</span>
+//                                 <span className="text-xs text-indigo-100">
+//                                   {new Date(comment.createdAt).toLocaleString()}
+//                                 </span>
+//                               </div>
+//                               <p className="text-white text-xs break-words">{comment.text}</p>
+//                             </div>
+//                           ))}
+//                         </div>
+//                       ) : (
+//                         <p className="text-indigo-300 text-xs">No comments yet</p>
+//                       )}
+//                       {user ? (
+//                         <form
+//                           className="mt-3"
+//                           onSubmit={(e) => {
+//                             e.preventDefault()
+//                             const form = e.target
+//                             const commentInput = form.elements.commentText
+//                             handleAddComment(post._id, commentInput.value)
+//                             commentInput.value = ""
+//                           }}
+//                         >
+//                           <div className="flex gap-2">
+//                             <input
+//                               name="commentText"
+//                               className="flex-1 bg-indigo-800 border border-indigo-600 rounded-lg p-2 text-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm"
+//                               placeholder="Add a comment..."
+//                               required
+//                             />
+//                             <button
+//                               type="submit"
+//                               className="bg-indigo-400 hover:bg-blue-300 text-gray-800 px-3 py-2 rounded-lg font-semibold text-xs"
+//                             >
+//                               Post
+//                             </button>
+//                           </div>
+//                         </form>
+//                       ) : (
+//                         <p className="text-red-300 mt-2 text-xs">Log in to comment.</p>
+//                       )}
+//                     </div>
+//                   )}
+//                 </div>
+//               ))
+//             )}
+//           </div>
+//         </div>
+
+//         {/* Desktop Layout */}
+//         <div className="hidden lg:grid lg:grid-cols-4 gap-6">
+//           {/* Left Sidebar */}
+//           <div className="col-span-1 sticky top-20 self-start max-h-[80vh] overflow-y-auto">
+//             {/* Announcements Section */}
+//             <div className="bg-indigo-300 p-5 rounded-xl shadow-md mb-6">
+//               <div className="flex justify-between items-center">
+//                 <h3 className="text-xl font-bold text-indigo-900">📢 Announcements</h3>
+//                 {user && (
+//                   <button
+//                     onClick={() => openModal("announcement")}
+//                     className="text-sm font-semibold text-white px-4 py-2 rounded-md bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-md transition-all duration-200 hover:scale-[1.03]"
+//                   >
+//                     Add
+//                   </button>
+//                 )}
+//               </div>
+//               {loading.announcements ? (
+//                 <p className="text-indigo-900 mt-3 font-medium">Loading announcements...</p>
+//               ) : error.announcements ? (
+//                 <p className="text-red-600 mt-3 font-semibold">Error: {error.announcements}</p>
+//               ) : (
+//                 <div className="mt-3 text-indigo-900 space-y-2 font-medium break-words">
+//                   {announcements.map((item, index) => (
+//                     <div key={index} className="bg-white bg-opacity-60 p-2 rounded-md shadow-sm">
+//                       {item}
+//                     </div>
+//                   ))}
+//                 </div>
+//               )}
+//             </div>
+
+//             {/* Achievements Section */}
+//             <div className="bg-purple-300 p-5 rounded-xl shadow-md">
+//               <div className="flex justify-between items-center">
+//                 <h3 className="text-xl font-bold text-purple-900">🏆 Achievements</h3>
+//                 {user && (
+//                   <button
+//                     onClick={() => openModal("achievement")}
+//                     className="text-sm font-semibold text-white px-4 py-2 rounded-md bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-md transition-all duration-200 hover:scale-[1.03]"
+//                   >
+//                     Add
+//                   </button>
+//                 )}
+//               </div>
+//               {loading.achievements ? (
+//                 <p className="text-purple-900 mt-3 font-medium">Loading achievements...</p>
+//               ) : error.achievements ? (
+//                 <p className="text-red-600 mt-3 font-semibold">Error: {error.achievements}</p>
+//               ) : (
+//                 <div className="mt-3 text-purple-900 space-y-2 font-medium break-words">
+//                   {achievements.map((item, index) => (
+//                     <div key={index} className="bg-white bg-opacity-60 p-2 rounded-md shadow-sm">
+//                       {item}
+//                     </div>
+//                   ))}
+//                 </div>
+//               )}
+//             </div>
+//           </div>
+
+//           {/* Main Feed */}
+//           <div className="col-span-2 px-5 rounded-2xl">
+//             {loading.posts ? (
+//               <div className="flex justify-center items-center h-36 rounded-xl">
+//                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-300"></div>
+//               </div>
+//             ) : error.posts ? (
+//               <div className="bg-red-500 text-white p-4 rounded-lg mb-4">Error loading posts: {error.posts}</div>
+//             ) : posts.length === 0 ? (
+//               <div className="bg-indigo-800 p-5 rounded-lg shadow-md mb-5 text-center">
+//                 <p className="text-indigo-200">No posts yet. Be the first to post!</p>
+//               </div>
+//             ) : (
+//               posts.map((post) => (
+//                 <div key={post._id} className="bg-gray-700 rounded-xl shadow-md mb-5 max-w-full mx-auto hover:shadow-lg transition-shadow">
+//                   <div className="flex items-center justify-between mb-2 p-1 rounded-b-lg bg-gradient-to-br from-indigo-300 to-indigo-200 shadow-md">
+//                     <div className="flex items-center gap-3 p-1">
+//                       <div
+//                         className="w-10 h-10 rounded-full bg-gray-400 font-bold flex items-center justify-center overflow-hidden border-2 border-white shadow-sm cursor-pointer transition-transform hover:scale-105"
+//                         onClick={() => handleUserClick(post.userId?._id || post.userId)}
+//                       >
+//                         {post.userId && post.userId.image ? (
+//                           <img
+//                             src={post.userId.image || "/placeholder.svg?height=40&width=40"}
+//                             alt={post.userId.name || "User"}
+//                             className="w-full h-full object-cover"
+//                             onError={(e) => {
+//                               e.target.src = "/placeholder.svg?height=40&width=40"
+//                             }}
+//                           />
+//                         ) : (
+//                           <span className="text-2xl text-gray-600">👤</span>
+//                         )}
+//                       </div>
+//                       <div>
+//                         <p
+//                           className="font-bold text-gray-800 cursor-pointer hover:text-indigo-700 transition-colors"
+//                           onClick={() => handleUserClick(post.userId?._id || post.userId)}
+//                         >
+//                           {post.userId?.name || post.username || "User"}
+//                         </p>
+//                         <p className="text-xs text-indigo-900 font-medium opacity-90">
+//                           {new Date(post.createdAt).toLocaleString()}
+//                         </p>
+//                       </div>
+//                     </div>
+//                     <PostActionsDropdown
+//                       post={post}
+//                       currentUser={user}
+//                       onDelete={handleDeletePost}
+//                       onReport={handleReportPost}
+//                       onSave={handleSavePost}
+//                       onForward={handleForwardPost}
+//                     />
+//                   </div>
+
+//                   {post.title && <h3 className="text-lg font-semibold mb-2">{post.title}</h3>}
+//                   <div className="text-indigo-100 whitespace-pre-wrap break-words overflow-wrap-anywhere p-2">
+//                     {post.content}
+//                   </div>
+
+//                   <PostImageDisplay
+//                     images={post.images}
+//                     onImageClick={(imageIndex) => openPostImageModal(post, imageIndex)}
+//                     onViewAllClick={(imageIndex) => openPostImageModal(post, imageIndex)}
+//                   />
+
+//                   {/* Like, dislike, comment buttons */}
+//                   <div className="flex gap-3 mt-3 p-2 bg-gray-800 rounded-b-xl">
+//                     <button
+//                       onClick={() => handleLikePost(post._id)}
+//                       className={`flex items-center gap-1 px-2 py-1 rounded ${
+//                         post.likes?.includes(user?._id)
+//                           ? "bg-indigo-700 text-white"
+//                           : "text-indigo-300 hover:text-indigo-200"
+//                       } transition-colors`}
+//                     >
+//                       👍 {post.likes?.length || 0}
+//                     </button>
+//                     <button
+//                       onClick={() => handleDislikePost(post._id)}
+//                       className={`flex items-center gap-1 px-2 py-1 rounded ${
+//                         post.dislikes?.includes(user?._id) ? "bg-red-600 text-white" : "text-red-300 hover:text-red-200"
+//                       } transition-colors`}
+//                     >
+//                       👎 {post.dislikes?.length || 0}
+//                     </button>
+//                     <button
+//                       onClick={() =>
+//                         setShowComments((prev) => ({
+//                           ...prev,
+//                           [post._id]: !prev[post._id],
+//                         }))
+//                       }
+//                       className="text-indigo-300 hover:text-indigo-200 flex items-center gap-1 transition-colors"
+//                     >
+//                       💬 {post.comments?.length || 0} Comments
+//                     </button>
+//                   </div>
+
+//                   {/* Comments section */}
+//                   {showComments[post._id] && (
+//                     <div className="mt-4 bg-gray-600 p-3 rounded-lg">
+//                       <h4 className="text-white mb-2 font-medium">Comments</h4>
+//                       {post.comments && post.comments.length > 0 ? (
+//                         <div className="space-y-2 max-h-60 overflow-y-auto">
+//                           {post.comments.map((comment, cIndex) => (
+//                             <div key={cIndex} className="bg-gray-800 p-2 rounded">
+//                               <div className="flex items-center gap-2 mb-1">
+//                                 <span className="font-semibold text-sm text-white">{comment.username || "User"}</span>
+//                                 <span className="text-xs text-indigo-100">
+//                                   {new Date(comment.createdAt).toLocaleString()}
+//                                 </span>
+//                               </div>
+//                               <p className="text-white text-sm font-thin break-words">{comment.text}</p>
+//                             </div>
+//                           ))}
+//                         </div>
+//                       ) : (
+//                         <p className="text-indigo-300 text-sm">No comments yet</p>
+//                       )}
+//                       {user ? (
+//                         <form
+//                           className="mt-3"
+//                           onSubmit={(e) => {
+//                             e.preventDefault()
+//                             const form = e.target
+//                             const commentInput = form.elements.commentText
+//                             handleAddComment(post._id, commentInput.value)
+//                             commentInput.value = ""
+//                           }}
+//                         >
+//                           <div className="flex gap-2">
+//                             <input
+//                               name="commentText"
+//                               className="flex-1 bg-indigo-800 border border-indigo-600 rounded-lg p-2 text-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+//                               placeholder="Add a comment..."
+//                               required
+//                             />
+//                             <button
+//                               type="submit"
+//                               className="bg-indigo-400 hover:bg-blue-300 text-gray-800 px-2 rounded-xl font-sans text-sm font-semibold transition-colors"
+//                             >
+//                               Comment
+//                             </button>
+//                           </div>
+//                         </form>
+//                       ) : (
+//                         <p className="text-red-300 mt-2 text-sm">Log in to comment.</p>
+//                       )}
+//                     </div>
+//                   )}
+//                 </div>
+//               ))
+//             )}
+//           </div>
+
+//           {/* Right Sidebar */}
+//           <div className="col-span-1 p-6">
+//             <div className="fixed top-20 right-4 w-[calc(28%-4rem)] max-h-screen mb-6 z-10">
+//               <div>
+//                 <ProfileSection />
+//               </div>
+
+//               <div className="mt-4 max-h-[60vh] overflow-y-auto overflow-x-hidden pr-1 scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-indigo-100">
+//                 {user && (
+//                   <div className="mb-4">
+//                     <CreatePostButton onCreatePost={createPost} loading={loading.posts} user={user} />
+//                   </div>
+//                 )}
+//                 <div
+//                   className="bg-indigo-500 mb-10 p-5 rounded-lg shadow-md cursor-pointer hover:bg-indigo-600 transition-colors"
+//                   onClick={handleExploreEvents}
+//                 >
+//                   <h3 className="text-lg font-semibold text-white">🌟 Explore Events</h3>
+//                   <p className="mt-2 text-white break-words">Check out the latest events happening!</p>
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* Modals */}
+//       {showModal && (
+//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+//           <div className="bg-indigo-800 p-6 rounded-lg shadow-xl max-w-md w-full">
+//             <h3 className="text-xl font-semibold text-white mb-4">
+//               Add {modalType === "announcement" ? "Announcement" : "Achievement"}
+//             </h3>
+//             <textarea
+//               className="w-full bg-indigo-700 border border-indigo-600 rounded-lg p-3 text-indigo-100 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+//               placeholder={`Enter ${modalType === "announcement" ? "announcement" : "achievement"} description...`}
+//               value={modalContent}
+//               onChange={(e) => setModalContent(e.target.value)}
+//               rows={4}
+//             />
+//             <div className="flex justify-end gap-3">
+//               <button
+//                 onClick={closeModal}
+//                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors"
+//               >
+//                 Cancel
+//               </button>
+//               <button
+//                 onClick={submitModal}
+//                 className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition-colors"
+//               >
+//                 Submit
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+
+//       {/* Image Modals */}
+//       <ImageModal
+//         images={currentPostImages}
+//         currentIndex={currentImageIndex}
+//         isOpen={showPostImageModal}
+//         onClose={() => setShowPostImageModal(false)}
+//         onIndexChange={setCurrentImageIndex}
+//       />
+
+//       {/* Forward Post Modal */}
+//       <ForwardPostModal
+//         isOpen={showForwardModal}
+//         onClose={() => {
+//           setShowForwardModal(false)
+//           setPostToForward(null)
+//         }}
+//         onForward={handleForwardComplete}
+//         post={postToForward}
+//       />
+//     </div>
+//   )
+// }
+
+// export default HomePage
+
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -3786,6 +5480,14 @@ import ImageModal from "./ImageModal"
 import ForwardPostModal from "./ForwardPostModal"
 import PostImageDisplay from "./PostImageDisplay"
 import CreatePostButton from "./CreatePostButton"
+import { 
+  MegaphoneIcon, 
+  TrophyIcon, 
+  ChevronRightIcon,
+  SparklesIcon,
+  EyeIcon,
+  PlusIcon
+} from "@heroicons/react/24/outline"
 
 const HomePage = () => {
   const [posts, setPosts] = useState([])
@@ -3794,6 +5496,8 @@ const HomePage = () => {
   const [showModal, setShowModal] = useState(false)
   const [modalContent, setModalContent] = useState("")
   const [modalType, setModalType] = useState("")
+  const [showMobileAnnouncements, setShowMobileAnnouncements] = useState(false)
+  const [showMobileAchievements, setShowMobileAchievements] = useState(false)
   const [loading, setLoading] = useState({
     posts: false,
     announcements: false,
@@ -3804,7 +5508,6 @@ const HomePage = () => {
     announcements: null,
     achievements: null,
   })
-
   const { user } = useUser()
   const navigate = useNavigate()
   const location = useLocation()
@@ -3834,7 +5537,6 @@ const HomePage = () => {
         setPostToForward(post)
         setShowForwardModal(true)
       }
-      // Clear the state
       navigate(location.pathname, { replace: true })
     }
   }, [location.state, posts, navigate])
@@ -3842,7 +5544,6 @@ const HomePage = () => {
   const fetchAnnouncements = async () => {
     setLoading((prev) => ({ ...prev, announcements: true }))
     setError((prev) => ({ ...prev, announcements: null }))
-
     try {
       const response = await fetch("http://localhost:5005/api/announcements")
       if (!response.ok) {
@@ -3861,7 +5562,6 @@ const HomePage = () => {
   const fetchAchievements = async () => {
     setLoading((prev) => ({ ...prev, achievements: true }))
     setError((prev) => ({ ...prev, achievements: null }))
-
     try {
       const response = await fetch("http://localhost:5005/api/achievements")
       if (!response.ok) {
@@ -3884,11 +5584,9 @@ const HomePage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ description }),
       })
-
       if (!response.ok) {
         throw new Error(`Failed to add announcement: ${response.statusText}`)
       }
-
       return response.json()
     } catch (error) {
       console.error("Error adding announcement:", error)
@@ -3903,11 +5601,9 @@ const HomePage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ description }),
       })
-
       if (!response.ok) {
         throw new Error(`Failed to add achievement: ${response.statusText}`)
       }
-
       return response.json()
     } catch (error) {
       console.error("Error adding achievement:", error)
@@ -3949,7 +5645,6 @@ const HomePage = () => {
   const fetchPosts = async () => {
     setLoading((prev) => ({ ...prev, posts: true }))
     setError((prev) => ({ ...prev, posts: null }))
-
     try {
       const res = await fetch("http://localhost:5005/api/posts")
       if (!res.ok) {
@@ -3972,7 +5667,6 @@ const HomePage = () => {
     }
 
     setLoading((prev) => ({ ...prev, posts: true }))
-
     const formData = new FormData()
     formData.append("content", postData.content)
     formData.append("userId", user._id)
@@ -3987,12 +5681,10 @@ const HomePage = () => {
         method: "POST",
         body: formData,
       })
-
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || `Failed to create post: ${response.status}`)
       }
-
       await fetchPosts()
     } catch (err) {
       console.error("Error creating post:", err)
@@ -4014,11 +5706,9 @@ const HomePage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: user._id }),
       })
-
       if (!res.ok) {
         throw new Error("Failed to like post")
       }
-
       const updatedPost = await res.json()
       setPosts((prevPosts) => prevPosts.map((post) => (post._id === postId ? updatedPost : post)))
     } catch (err) {
@@ -4038,11 +5728,9 @@ const HomePage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: user._id }),
       })
-
       if (!res.ok) {
         throw new Error("Failed to dislike post")
       }
-
       const updatedPost = await res.json()
       setPosts((prevPosts) => prevPosts.map((post) => (post._id === postId ? updatedPost : post)))
     } catch (err) {
@@ -4068,11 +5756,9 @@ const HomePage = () => {
           username: user.name,
         }),
       })
-
       if (!res.ok) {
         throw new Error("Failed to add comment")
       }
-
       const updatedPost = await res.json()
       setPosts((prevPosts) => prevPosts.map((post) => (post._id === postId ? updatedPost : post)))
     } catch (err) {
@@ -4088,19 +5774,16 @@ const HomePage = () => {
     }
 
     setIsDeleting(true)
-
     try {
       const res = await fetch(`http://localhost:5005/api/posts/${postId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: user._id }),
       })
-
       if (!res.ok) {
         const errorData = await res.json()
         throw new Error(errorData.error || "Failed to delete post")
       }
-
       setPosts((prevPosts) => prevPosts.filter((post) => post._id !== postId))
     } catch (err) {
       console.error("Error deleting post:", err)
@@ -4125,7 +5808,6 @@ const HomePage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: user._id, reason }),
       })
-
       if (response.ok) {
         alert("Post reported successfully")
       } else {
@@ -4149,7 +5831,6 @@ const HomePage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: user._id }),
       })
-
       if (response.ok) {
         alert("Post saved successfully!")
       } else {
@@ -4199,288 +5880,552 @@ const HomePage = () => {
           <MessageNotification userId={user._id} token={localStorage.getItem("token") || ""} />
         </div>
       )}
-<div className="container mx-auto py-20 px-8 grid grid-cols-1 md:grid-cols-4 gap-6 relative">
 
-  {/* Left Sidebar */}
-  <div className="hidden md:block md:col-span-1 sticky top-20 self-start max-h-[80vh] overflow-y-auto overflow-x-hidden pr-2 scrollbar-thin scrollbar-thumb-indigo-600 scrollbar-track-indigo-200">
-    
-    {/* Announcements Section */}
-    <div className="bg-indigo-300 p-5 rounded-xl shadow-md">
-      <div className="flex justify-between items-center">
-        <h3 className="text-xl font-bold text-indigo-900">📢 Announcements</h3>
-     {user && (
-  <button
-    onClick={() => openModal("announcement")}
-    className="text-sm font-semibold text-white px-4 py-2 rounded-md 
-               bg-gradient-to-r from-indigo-600 to-purple-600 
-               hover:from-indigo-700 hover:to-purple-700 
-               shadow-md transition-all duration-200 hover:scale-[1.03]"
-  >
-    Add
-  </button>
-)}
-
-      </div>
-      {loading.announcements ? (
-        <p className="text-indigo-900 mt-3 font-medium">Loading announcements...</p>
-      ) : error.announcements ? (
-        <p className="text-red-600 mt-3 font-semibold">Error: {error.announcements}</p>
-      ) : (
-        <div className="mt-3 text-indigo-900 space-y-2 font-medium break-words">
-          {announcements.map((item, index) => (
-            <div key={index} className="bg-white bg-opacity-60 p-2 rounded-md shadow-sm">{item}</div>
-          ))}
-        </div>
-      )}
-    </div>
-
-    {/* Achievements Section */}
-    <div className="bg-purple-300 mt-6 p-5 rounded-xl shadow-md">
-      <div className="flex justify-between items-center">
-        <h3 className="text-xl font-bold text-purple-900">🏆 Achievements</h3>
-       {user && (
-  <button
-    onClick={() => openModal("achievement")}
-    className="text-sm font-semibold text-white px-4 py-2 rounded-md 
-               bg-gradient-to-r from-indigo-600 to-purple-600 
-               hover:from-indigo-700 hover:to-purple-700 
-               shadow-md transition-all duration-200 hover:scale-[1.03]"
-  >
-    Add
-  </button>
-)}
-
-      </div>
-      {loading.achievements ? (
-        <p className="text-purple-900 mt-3 font-medium">Loading achievements...</p>
-      ) : error.achievements ? (
-        <p className="text-red-600 mt-3 font-semibold">Error: {error.achievements}</p>
-      ) : (
-        <div className="mt-3 text-purple-900 space-y-2 font-medium break-words">
-          {achievements.map((item, index) => (
-            <div key={index} className="bg-white bg-opacity-60 p-2 rounded-md shadow-sm">{item}</div>
-          ))}
-        </div>
-      )}
-    </div>
-
-  </div>
-
-
-
-
-
-
-
-
-
-
-
-        {/* Main Feed */}
-        <div className="md:col-span-2 px-5 rounded-2xl">
-          {/* Enhanced Create Post Button */}
-        
-
-          {loading.posts ? (
-            <div className="flex justify-center items-center h-36 rounded-xl">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-300"></div>
+      <div className="container mx-auto py-20 px-4 sm:px-6 lg:px-8">
+        {/* Mobile Layout */}
+        <div className="block lg:hidden space-y-6">
+          {/* Mobile Create Post */}
+          {user && (
+            <div className="bg-gray-700 rounded-lg shadow-md p-4 animate-fadeIn">
+              <CreatePostButton onCreatePost={createPost} loading={loading.posts} user={user} />
             </div>
-          ) : error.posts ? (
-            <div className="bg-red-500 text-white p-4 rounded-lg mb-4">Error loading posts: {error.posts}</div>
-          ) : posts.length === 0 ? (
-            <div className="bg-indigo-800 p-5 rounded-lg shadow-md mb-5 text-center">
-              <p className="text-indigo-200">No posts yet. Be the first to post!</p>
-            </div>
-          ) : (
-            posts.map((post) => (
-              <div
-                key={post._id}
-               className="bg-gray-700 rounded-xl shadow-md mb-5 max-w-full mx-auto hover:shadow-lg transition-shadow"
-              >
-       <div className="flex items-center justify-between mb-2 p-1 rounded-b-lg bg-gradient-to-br from-indigo-300 to-indigo-200  shadow-md">
-  <div className="flex items-center gap-3 p-1">
-    <div
-      className="w-10 h-10 rounded-full bg-gray-400 font-bold flex items-center justify-center overflow-hidden border-2 border-white shadow-sm cursor-pointer transition-transform hover:scale-105 "
-      onClick={() => handleUserClick(post.userId?._id || post.userId)}
-    >
-      {post.userId && post.userId.image ? (
-        <img
-          src={post.userId.image || "/placeholder.svg?height=40&width=40"}
-          alt={post.userId.name || "User"}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            e.target.src = "/placeholder.svg?height=40&width=40"
-          }}
-        />
-      ) : (
-        <span className="text-2xl text-gray-600">👤</span>
-      )}
-    </div>
+          )}
 
-    <div>
-      <p
-        className="font-bold text-gray-800  cursor-pointer hover:text-indigo-700 transition-colors"
-        onClick={() => handleUserClick(post.userId?._id || post.userId)}
-      >
-        {post.userId?.name || post.username || "User"}
-      </p>
-      <p className="text-xs text-indigo-900 font-medium opacity-90">
-        {new Date(post.createdAt).toLocaleString()}
-      </p>
-    </div>
-  </div>
-
-  <PostActionsDropdown
-    post={post}
-    currentUser={user}
-    onDelete={handleDeletePost}
-    onReport={handleReportPost}
-    onSave={handleSavePost}
-    onForward={handleForwardPost}
-  />
-</div>
-
-
-                {post.title && <h3 className="text-lg font-semibold mb-2">{post.title}</h3>}
-
-                <div className="text-indigo-100 whitespace-pre-wrap break-words overflow-wrap-anywhere p-2">
-                  {post.content}
-                </div>
-
-                {/* Improved Image Display */}
-                <PostImageDisplay
-                  images={post.images}
-                  onImageClick={(imageIndex) => openPostImageModal(post, imageIndex)}
-                  onViewAllClick={(imageIndex) => openPostImageModal(post, imageIndex)}
+          {/* Mobile Interactive Buttons for Announcements & Achievements */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Announcements Button */}
+            <button
+              onClick={() => setShowMobileAnnouncements(!showMobileAnnouncements)}
+              className="bg-gradient-to-br from-indigo-500 to-purple-600 p-4 rounded-xl shadow-lg transform transition-all duration-300 hover:scale-105 active:scale-95 relative z-10"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <MegaphoneIcon className="h-6 w-6 text-white" />
+                <ChevronRightIcon 
+                  className={`h-5 w-5 text-white transition-transform duration-300 ${
+                    showMobileAnnouncements ? 'rotate-90' : ''
+                  }`} 
                 />
+              </div>
+              <h3 className="text-white font-bold text-sm">Announcements</h3>
+              <p className="text-indigo-100 text-xs mt-1">{announcements.length} items</p>
+              <div className="flex items-center mt-2">
+                <SparklesIcon className="h-4 w-4 text-yellow-300 mr-1" />
+                <span className="text-xs text-yellow-300">Tap to view</span>
+              </div>
+            </button>
 
-                {/* Like, dislike, comment buttons */}
-                <div className="flex gap-3 mt-3 p-2 bg-gray-800 rounded-b-xl">
+            {/* Achievements Button */}
+            <button
+              onClick={() => setShowMobileAchievements(!showMobileAchievements)}
+              className="bg-gradient-to-br from-purple-500 to-pink-600 p-4 rounded-xl shadow-lg transform transition-all duration-300 hover:scale-105 active:scale-95 relative z-10"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <TrophyIcon className="h-6 w-6 text-white" />
+                <ChevronRightIcon 
+                  className={`h-5 w-5 text-white transition-transform duration-300 ${
+                    showMobileAchievements ? 'rotate-90' : ''
+                  }`} 
+                />
+              </div>
+              <h3 className="text-white font-bold text-sm">Achievements</h3>
+              <p className="text-purple-100 text-xs mt-1">{achievements.length} items</p>
+              <div className="flex items-center mt-2">
+                <SparklesIcon className="h-4 w-4 text-yellow-300 mr-1" />
+                <span className="text-xs text-yellow-300">Tap to view</span>
+              </div>
+            </button>
+          </div>
+
+          {/* Mobile Announcements Expandable */}
+          {showMobileAnnouncements && (
+            <div className="bg-indigo-300 p-4 rounded-xl shadow-md animate-slideDown relative z-5n ">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-lg font-bold text-indigo-900 flex items-center">
+                  <MegaphoneIcon className="h-5 w-5 mr-2" />
+                  Announcements
+                </h3>
+                {user && (
                   <button
-                    onClick={() => handleLikePost(post._id)}
-                    className={`flex items-center gap-1 px-2 py-1 rounded ${
-                      post.likes?.includes(user?._id)
-                        ? "bg-indigo-700 text-white"
-                        : "text-indigo-300 hover:text-indigo-200"
-                    } transition-colors`}
+                    onClick={() => openModal("announcement")}
+                    className="flex items-center gap-1 text-xs font-semibold text-white px-3 py-1 rounded-md bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
                   >
-                    👍 {post.likes?.length || 0}
+                    <PlusIcon className="h-3 w-3" />
+                    Add
                   </button>
-
-                  <button
-                    onClick={() => handleDislikePost(post._id)}
-                    className={`flex items-center gap-1 px-2 py-1 rounded ${
-                      post.dislikes?.includes(user?._id) ? "bg-red-600 text-white" : "text-red-300 hover:text-red-200"
-                    } transition-colors`}
-                  >
-                    👎 {post.dislikes?.length || 0}
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      setShowComments((prev) => ({
-                        ...prev,
-                        [post._id]: !prev[post._id],
-                      }))
-                    }
-                    className="text-indigo-300 hover:text-indigo-200 flex items-center gap-1 transition-colors"
-                  >
-                    💬 {post.comments?.length || 0} Comments
-                  </button>
-                </div>
-
-                {/* Comments section */}
-                {showComments[post._id] && (
-                  <div className="mt-4 bg-gray-600 p-3 rounded-lg">
-                    <h4 className="text-white mb-2 font-medium">Comments</h4>
-                    {post.comments && post.comments.length > 0 ? (
-                      <div className="space-y-2 max-h-60 overflow-y-auto">
-                        {post.comments.map((comment, cIndex) => (
-                          <div key={cIndex} className="bg-gray-800 p-2 rounded">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-semibold text-sm text-white">{comment.username || "User"}</span>
-                              <span className="text-xs text-indigo-100">
-                                {new Date(comment.createdAt).toLocaleString()}
-                              </span>
-                            </div>
-                            <p className="text-white text-sm font-thin break-words">{comment.text}</p>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-indigo-300 text-sm">No comments yet</p>
-                    )}
-
-                    {user ? (
-                      <form
-                        className="mt-3"
-                        onSubmit={(e) => {
-                          e.preventDefault()
-                          const form = e.target
-                          const commentInput = form.elements.commentText
-                          handleAddComment(post._id, commentInput.value)
-                          commentInput.value = ""
-                        }}
-                      >
-                        <div className="flex gap-2">
-                          <input
-                            name="commentText"
-                            className="flex-1 bg-indigo-800 border border-indigo-600 rounded-lg p-2 text-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                            placeholder="Add a comment..."
-                            required
-                          />
-                          <button
-                            type="submit"
-                            className="bg-indigo-400 hover:bg-blue-300 text-gray-800 px-2 rounded-xl font-sans text-sm font-semibold transition-colors"
-                          >
-                            Comment
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <p className="text-red-300 mt-2 text-sm">Log in to comment.</p>
-                    )}
-                  </div>
                 )}
               </div>
-            ))
+              {loading.announcements ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-900"></div>
+                  <p className="text-indigo-900 text-sm ml-2">Loading...</p>
+                </div>
+              ) : error.announcements ? (
+                <p className="text-red-600 text-sm">Error: {error.announcements}</p>
+              ) : (
+                <div className="space-y-2 text-indigo-900 text-sm max-h-48 overflow-y-auto">
+                  {announcements.map((item, index) => (
+                    <div key={index} className="bg-white bg-opacity-70 p-3 rounded-md shadow-sm animate-fadeIn" style={{animationDelay: `${index * 0.1}s`}}>
+                      {item}
+                    </div>
+                  ))}
+                  {announcements.length === 0 && (
+                    <div className="text-center py-4">
+                      <p className="text-indigo-700">No announcements yet</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
+
+          {/* Mobile Achievements Expandable */}
+          {showMobileAchievements && (
+            <div className="bg-purple-300 p-4 rounded-xl shadow-md animate-slideDown">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-lg font-bold text-purple-900 flex items-center">
+                  <TrophyIcon className="h-5 w-5 mr-2" />
+                  Achievements
+                </h3>
+                {user && (
+                  <button
+                    onClick={() => openModal("achievement")}
+                    className="flex items-center gap-1 text-xs font-semibold text-white px-3 py-1 rounded-md bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-all duration-200 transform hover:scale-105"
+                  >
+                    <PlusIcon className="h-3 w-3" />
+                    Add
+                  </button>
+                )}
+              </div>
+              {loading.achievements ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-900"></div>
+                  <p className="text-purple-900 text-sm ml-2">Loading...</p>
+                </div>
+              ) : error.achievements ? (
+                <p className="text-red-600 text-sm">Error: {error.achievements}</p>
+              ) : (
+                <div className="space-y-2 text-purple-900 text-sm max-h-48 overflow-y-auto">
+                  {achievements.map((item, index) => (
+                    <div key={index} className="bg-white bg-opacity-70 p-3 rounded-md shadow-sm animate-fadeIn" style={{animationDelay: `${index * 0.1}s`}}>
+                      {item}
+                    </div>
+                  ))}
+                  {achievements.length === 0 && (
+                    <div className="text-center py-4">
+                      <p className="text-purple-700">No achievements yet</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Mobile Posts Feed */}
+          <div className="space-y-4">
+            {loading.posts ? (
+              <div className="flex justify-center items-center h-36">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-300"></div>
+              </div>
+            ) : error.posts ? (
+              <div className="bg-red-500 text-white p-4 rounded-lg text-sm">Error loading posts: {error.posts}</div>
+            ) : posts.length === 0 ? (
+              <div className="bg-indigo-800 p-4 rounded-lg shadow-md text-center">
+                <p className="text-indigo-200 text-sm">No posts yet. Be the first to post!</p>
+              </div>
+            ) : (
+              posts.map((post, index) => (
+                <div key={post._id} className="bg-gray-700 rounded-xl shadow-md animate-fadeIn" style={{animationDelay: `${index * 0.1}s`}}>
+                  <div className="flex items-center justify-between mb-2 p-3 bg-gradient-to-br from-indigo-300 to-indigo-200 rounded-t-xl">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-full bg-gray-400 font-bold flex items-center justify-center overflow-hidden border-2 border-white shadow-sm cursor-pointer transition-transform hover:scale-110"
+                        onClick={() => handleUserClick(post.userId?._id || post.userId)}
+                      >
+                        {post.userId && post.userId.image ? (
+                          <img
+                            src={post.userId.image || "/placeholder.svg?height=40&width=40"}
+                            alt={post.userId.name || "User"}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.src = "/placeholder.svg?height=40&width=40"
+                            }}
+                          />
+                        ) : (
+                          <span className="text-xl text-gray-600">👤</span>
+                        )}
+                      </div>
+                      <div>
+                        <p
+                          className="font-bold text-gray-800 cursor-pointer hover:text-indigo-700 text-sm transition-colors"
+                          onClick={() => handleUserClick(post.userId?._id || post.userId)}
+                        >
+                          {post.userId?.name || post.username || "User"}
+                        </p>
+                        <p className="text-xs text-indigo-900 opacity-90">
+                          {new Date(post.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                    <PostActionsDropdown
+                      post={post}
+                      currentUser={user}
+                      onDelete={handleDeletePost}
+                      onReport={handleReportPost}
+                      onSave={handleSavePost}
+                      onForward={handleForwardPost}
+                    />
+                  </div>
+
+                  {post.title && <h3 className="text-base font-semibold mb-2 px-3">{post.title}</h3>}
+
+                  <div className="text-indigo-100 whitespace-pre-wrap break-words p-3 text-sm">
+                    {post.content}
+                  </div>
+
+                  <PostImageDisplay
+                    images={post.images}
+                    onImageClick={(imageIndex) => openPostImageModal(post, imageIndex)}
+                    onViewAllClick={(imageIndex) => openPostImageModal(post, imageIndex)}
+                  />
+
+                  {/* Mobile-optimized action buttons */}
+                  <div className="flex gap-2 p-3 bg-gray-800 rounded-b-xl">
+                    <button
+                      onClick={() => handleLikePost(post._id)}
+                      className={`flex items-center gap-1 px-3 py-2 rounded text-sm transition-all duration-200 transform hover:scale-105 ${
+                        post.likes?.includes(user?._id)
+                          ? "bg-indigo-700 text-white"
+                          : "text-indigo-300 hover:text-indigo-200"
+                      }`}
+                    >
+                      👍 {post.likes?.length || 0}
+                    </button>
+                    <button
+                      onClick={() => handleDislikePost(post._id)}
+                      className={`flex items-center gap-1 px-3 py-2 rounded text-sm transition-all duration-200 transform hover:scale-105 ${
+                        post.dislikes?.includes(user?._id) ? "bg-red-600 text-white" : "text-red-300 hover:text-red-200"
+                      }`}
+                    >
+                      👎 {post.dislikes?.length || 0}
+                    </button>
+                    <button
+                      onClick={() =>
+                        setShowComments((prev) => ({
+                          ...prev,
+                          [post._id]: !prev[post._id],
+                        }))
+                      }
+                      className="text-indigo-300 hover:text-indigo-200 flex items-center gap-1 px-3 py-2 rounded text-sm transition-all duration-200 transform hover:scale-105"
+                    >
+                      💬 {post.comments?.length || 0}
+                    </button>
+                  </div>
+
+                  {/* Comments section */}
+                  {showComments[post._id] && (
+                    <div className="p-3 bg-gray-600 rounded-b-lg animate-slideDown">
+                      <h4 className="text-white mb-2 font-medium text-sm">Comments</h4>
+                      {post.comments && post.comments.length > 0 ? (
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {post.comments.map((comment, cIndex) => (
+                            <div key={cIndex} className="bg-gray-800 p-2 rounded text-sm animate-fadeIn">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-semibold text-white text-xs">{comment.username || "User"}</span>
+                                <span className="text-xs text-indigo-100">
+                                  {new Date(comment.createdAt).toLocaleString()}
+                                </span>
+                              </div>
+                              <p className="text-white text-xs break-words">{comment.text}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-indigo-300 text-xs">No comments yet</p>
+                      )}
+                      {user ? (
+                        <form
+                          className="mt-3"
+                          onSubmit={(e) => {
+                            e.preventDefault()
+                            const form = e.target
+                            const commentInput = form.elements.commentText
+                            handleAddComment(post._id, commentInput.value)
+                            commentInput.value = ""
+                          }}
+                        >
+                          <div className="flex gap-2">
+                            <input
+                              name="commentText"
+                              className="flex-1 bg-indigo-800 border border-indigo-600 rounded-lg p-2 text-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm"
+                              placeholder="Add a comment..."
+                              required
+                            />
+                            <button
+                              type="submit"
+                              className="bg-indigo-400 hover:bg-blue-300 text-gray-800 px-3 py-2 rounded-lg font-semibold text-xs transition-all duration-200 transform hover:scale-105"
+                            >
+                              Post
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        <p className="text-red-300 mt-2 text-xs">Log in to comment.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
-{/* Right Sidebar */}
-<div className="hidden md:block md:col-span-1 p-6">
-  <div className="fixed top-20 right-4 w-[calc(28%-4rem)] max-h-screen mb-6 z-10">
-    <div>
-      <ProfileSection />
-    </div>
-   
-    {/* Scrollable inner content */}
-    <div className="mt-4 max-h-[60vh] overflow-y-auto overflow-x-hidden pr-1 scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-indigo-100">
-      
-      {user && (
-        <div className="mb-4">
-          <CreatePostButton onCreatePost={createPost} loading={loading.posts} user={user} />
+        {/* Desktop Layout - Keep existing desktop layout unchanged */}
+        <div className="hidden lg:grid lg:grid-cols-4 gap-6">
+          {/* Left Sidebar */}
+          <div className="col-span-1 sticky top-20 self-start max-h-[80vh] overflow-y-auto">
+            {/* Announcements Section */}
+            <div className="bg-indigo-300 p-5 rounded-xl shadow-md mb-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-bold text-indigo-900">📢 Announcements</h3>
+                {user && (
+                  <button
+                    onClick={() => openModal("announcement")}
+                    className="text-sm font-semibold text-white px-4 py-2 rounded-md bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-md transition-all duration-200 hover:scale-[1.03]"
+                  >
+                    Add
+                  </button>
+                )}
+              </div>
+              {loading.announcements ? (
+                <p className="text-indigo-900 mt-3 font-medium">Loading announcements...</p>
+              ) : error.announcements ? (
+                <p className="text-red-600 mt-3 font-semibold">Error: {error.announcements}</p>
+              ) : (
+                <div className="mt-3 text-indigo-900 space-y-2 font-medium break-words">
+                  {announcements.map((item, index) => (
+                    <div key={index} className="bg-white bg-opacity-60 p-2 rounded-md shadow-sm">
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Achievements Section */}
+            <div className="bg-purple-300 p-5 rounded-xl shadow-md">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-bold text-purple-900">🏆 Achievements</h3>
+                {user && (
+                  <button
+                    onClick={() => openModal("achievement")}
+                    className="text-sm font-semibold text-white px-4 py-2 rounded-md bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-md transition-all duration-200 hover:scale-[1.03]"
+                  >
+                    Add
+                  </button>
+                )}
+              </div>
+              {loading.achievements ? (
+                <p className="text-purple-900 mt-3 font-medium">Loading achievements...</p>
+              ) : error.achievements ? (
+                <p className="text-red-600 mt-3 font-semibold">Error: {error.achievements}</p>
+              ) : (
+                <div className="mt-3 text-purple-900 space-y-2 font-medium break-words">
+                  {achievements.map((item, index) => (
+                    <div key={index} className="bg-white bg-opacity-60 p-2 rounded-md shadow-sm">
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Main Feed - Keep existing desktop layout */}
+          <div className="col-span-2 px-5 rounded-2xl">
+            {loading.posts ? (
+              <div className="flex justify-center items-center h-36 rounded-xl">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-300"></div>
+              </div>
+            ) : error.posts ? (
+              <div className="bg-red-500 text-white p-4 rounded-lg mb-4">Error loading posts: {error.posts}</div>
+            ) : posts.length === 0 ? (
+              <div className="bg-indigo-800 p-5 rounded-lg shadow-md mb-5 text-center">
+                <p className="text-indigo-200">No posts yet. Be the first to post!</p>
+              </div>
+            ) : (
+              posts.map((post) => (
+                <div key={post._id} className="bg-gray-700 rounded-xl shadow-md mb-5 max-w-full mx-auto hover:shadow-lg transition-shadow">
+                  <div className="flex items-center justify-between mb-2 p-1 rounded-b-lg bg-gradient-to-br from-indigo-300 to-indigo-200 shadow-md">
+                    <div className="flex items-center gap-3 p-1">
+                      <div
+                        className="w-10 h-10 rounded-full bg-gray-400 font-bold flex items-center justify-center overflow-hidden border-2 border-white shadow-sm cursor-pointer transition-transform hover:scale-105"
+                        onClick={() => handleUserClick(post.userId?._id || post.userId)}
+                      >
+                        {post.userId && post.userId.image ? (
+                          <img
+                            src={post.userId.image || "/placeholder.svg?height=40&width=40"}
+                            alt={post.userId.name || "User"}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.src = "/placeholder.svg?height=40&width=40"
+                            }}
+                          />
+                        ) : (
+                          <span className="text-2xl text-gray-600">👤</span>
+                        )}
+                      </div>
+                      <div>
+                        <p
+                          className="font-bold text-gray-800 cursor-pointer hover:text-indigo-700 transition-colors"
+                          onClick={() => handleUserClick(post.userId?._id || post.userId)}
+                        >
+                          {post.userId?.name || post.username || "User"}
+                        </p>
+                        <p className="text-xs text-indigo-900 font-medium opacity-90">
+                          {new Date(post.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                    <PostActionsDropdown
+                      post={post}
+                      currentUser={user}
+                      onDelete={handleDeletePost}
+                      onReport={handleReportPost}
+                      onSave={handleSavePost}
+                      onForward={handleForwardPost}
+                    />
+                  </div>
+
+                  {post.title && <h3 className="text-lg font-semibold mb-2">{post.title}</h3>}
+                  <div className="text-indigo-100 whitespace-pre-wrap break-words overflow-wrap-anywhere p-2">
+                    {post.content}
+                  </div>
+
+                  <PostImageDisplay
+                    images={post.images}
+                    onImageClick={(imageIndex) => openPostImageModal(post, imageIndex)}
+                    onViewAllClick={(imageIndex) => openPostImageModal(post, imageIndex)}
+                  />
+
+                  {/* Like, dislike, comment buttons */}
+                  <div className="flex gap-3 mt-3 p-2 bg-gray-800 rounded-b-xl">
+                    <button
+                      onClick={() => handleLikePost(post._id)}
+                      className={`flex items-center gap-1 px-2 py-1 rounded ${
+                        post.likes?.includes(user?._id)
+                          ? "bg-indigo-700 text-white"
+                          : "text-indigo-300 hover:text-indigo-200"
+                      } transition-colors`}
+                    >
+                      👍 {post.likes?.length || 0}
+                    </button>
+                    <button
+                      onClick={() => handleDislikePost(post._id)}
+                      className={`flex items-center gap-1 px-2 py-1 rounded ${
+                        post.dislikes?.includes(user?._id) ? "bg-red-600 text-white" : "text-red-300 hover:text-red-200"
+                      } transition-colors`}
+                    >
+                      👎 {post.dislikes?.length || 0}
+                    </button>
+                    <button
+                      onClick={() =>
+                        setShowComments((prev) => ({
+                          ...prev,
+                          [post._id]: !prev[post._id],
+                        }))
+                      }
+                      className="text-indigo-300 hover:text-indigo-200 flex items-center gap-1 transition-colors"
+                    >
+                      💬 {post.comments?.length || 0} Comments
+                    </button>
+                  </div>
+
+                  {/* Comments section */}
+                  {showComments[post._id] && (
+                    <div className="mt-4 bg-gray-600 p-3 rounded-lg">
+                      <h4 className="text-white mb-2 font-medium">Comments</h4>
+                      {post.comments && post.comments.length > 0 ? (
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                          {post.comments.map((comment, cIndex) => (
+                            <div key={cIndex} className="bg-gray-800 p-2 rounded">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-semibold text-sm text-white">{comment.username || "User"}</span>
+                                <span className="text-xs text-indigo-100">
+                                  {new Date(comment.createdAt).toLocaleString()}
+                                </span>
+                              </div>
+                              <p className="text-white text-sm font-thin break-words">{comment.text}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-indigo-300 text-sm">No comments yet</p>
+                      )}
+                      {user ? (
+                        <form
+                          className="mt-3"
+                          onSubmit={(e) => {
+                            e.preventDefault()
+                            const form = e.target
+                            const commentInput = form.elements.commentText
+                            handleAddComment(post._id, commentInput.value)
+                            commentInput.value = ""
+                          }}
+                        >
+                          <div className="flex gap-2">
+                            <input
+                              name="commentText"
+                              className="flex-1 bg-indigo-800 border border-indigo-600 rounded-lg p-2 text-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                              placeholder="Add a comment..."
+                              required
+                            />
+                            <button
+                              type="submit"
+                              className="bg-indigo-400 hover:bg-blue-300 text-gray-800 px-2 rounded-xl font-sans text-sm font-semibold transition-colors"
+                            >
+                              Comment
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        <p className="text-red-300 mt-2 text-sm">Log in to comment.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Right Sidebar - Keep existing desktop layout */}
+          <div className="col-span-1 p-6">
+            <div className="fixed top-20 right-4 w-[calc(28%-4rem)] max-h-screen mb-6 z-10">
+              <div>
+                <ProfileSection />
+              </div>
+
+              <div className="mt-4 max-h-[60vh] overflow-y-auto overflow-x-hidden pr-1 scrollbar-thin scrollbar-thumb-indigo-400 scrollbar-track-indigo-100">
+                {user && (
+                  <div className="mb-4">
+                    <CreatePostButton onCreatePost={createPost} loading={loading.posts} user={user} />
+                  </div>
+                )}
+                <div
+                  className="bg-indigo-500 mb-10 p-5 rounded-lg shadow-md cursor-pointer hover:bg-indigo-600 transition-colors"
+                  onClick={handleExploreEvents}
+                >
+                  <h3 className="text-lg font-semibold text-white">🌟 Explore Events</h3>
+                  <p className="mt-2 text-white break-words">Check out the latest events happening!</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      )}
-
-      <div
-        className="bg-indigo-500 mb-10 p-5 rounded-lg shadow-md cursor-pointer hover:bg-indigo-600 transition-colors"
-        onClick={handleExploreEvents}
-      >
-        <h3 className="text-lg font-semibold text-white">🌟 Explore Events</h3>
-        <p className="mt-2 text-white break-words">
-          Check out the latest events happening!
-        </p>
-      </div>
-
-    </div>
-  </div>
-</div>
       </div>
 
       {/* Modals */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-indigo-800 p-6 rounded-lg shadow-xl max-w-md w-full">
             <h3 className="text-xl font-semibold text-white mb-4">
               Add {modalType === "announcement" ? "Announcement" : "Achievement"}
@@ -4529,6 +6474,27 @@ const HomePage = () => {
         onForward={handleForwardComplete}
         post={postToForward}
       />
+
+      {/* Custom CSS for animations */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        .animate-slideDown {
+          animation: slideDown 0.3s ease-out forwards;
+        }
+      `}</style>
     </div>
   )
 }

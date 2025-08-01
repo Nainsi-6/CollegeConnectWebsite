@@ -530,7 +530,7 @@ const HomePage = () => {
 
           {/* Explore Events Section */}
           <div
-            className="bg-indigo-600 mt-6 p-5 rounded-lg shadow-md cursor-pointer hover:bg-indigo-700 transition-colors"
+            className="bg-indigo-600 mt-3 p-5 rounded-lg shadow-md cursor-pointer hover:bg-indigo-700 transition-colors"
             onClick={handleExploreEvents}
           >
             <h3 className="text-lg font-semibold text-white">🌟 Explore Events</h3>

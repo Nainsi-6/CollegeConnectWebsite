@@ -32,7 +32,7 @@
     "framer-motion": "^12.6.2",
     "gh-pages": "^6.2.0",
     "jsonwebtoken": "^9.0.2",
-    "lucide-react": "^0.475.0",
+    "lucide-react": "^0.536.0",
     "mongoose": "^8.10.0",
     "multer": "^1.4.5-lts.2",
     "openai": "^4.84.1",
