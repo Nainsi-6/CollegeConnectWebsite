@@ -87,41 +87,37 @@ CollegeConnectWebsite/
 ```bash
 git clone https://github.com/Nainsi-6/CollegeConnectWebsite.git
 cd CollegeConnectWebsite
+```
 2️⃣ Install Dependencies
 Frontend
+```bash
 npm install
+```
 Backend
+```bash
 cd backend
 npm install
+```
 3️⃣ Environment Variables
 Create a .env file inside the backend folder:
 
-bash
-Copy code
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
+
 4️⃣ Run the Application
 Start Backend Server
+```bash
 cd backend
 npm start
+```
 Start Frontend
-bash
-Copy code
+```bash
 npm run dev
+```
+
 The application will be available at:
-
-arduino
-Copy code
 http://localhost:5173
-🚀 Future Enhancements
-Advanced job and connection recommendations
-
-Real-time notifications using WebSockets
-
-Improved NLP-based job matching
-
-Role-based analytics dashboard
 
 👩‍💻 Author
 Nainsi Gupta
