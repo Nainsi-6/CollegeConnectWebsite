@@ -51,6 +51,7 @@ This allows users to explore opportunities directly within the platform.
 - Puppeteer, Cheerio (Web Scraping)
 - Natural (NLP)
 - JWT Authentication
+- Socket.io
 - Multer (File Uploads)
 
 ---
